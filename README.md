@@ -15,3 +15,7 @@ side: neither depends on the other.
 | [`libhxmath`](libhxmath/README.md) | Fixed point, trig, vectors, matrices | In progress |
 
 Hot paths are SH-2 assembly behind a C API.
+
+## Licence
+
+MIT ([LICENSE](LICENSE)).
