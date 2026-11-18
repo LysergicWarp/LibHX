@@ -5,7 +5,7 @@
 /* Folded into the first eighth of a turn, where the smaller over the larger is 0 to 1. The angle
  * is base plus the arc, or less it where sign is -1. */
 hx_angle_t
-hx_ref_atan2(hx_fix16_t y, hx_fix16_t x)
+hx_ref_atan2_fast(hx_fix16_t y, hx_fix16_t x)
 {
         uint32_t small = (y < 0) ? (0U - (uint32_t)y) : (uint32_t)y;
         uint32_t large = (x < 0) ? (0U - (uint32_t)x) : (uint32_t)x;

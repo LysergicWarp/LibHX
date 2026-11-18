@@ -19,15 +19,70 @@ void hx_mat_transpose(const hx_mat_t *m, hx_mat_t *result);
 /* The inverse of a rotation with a translation. Not for a matrix that scales */
 void hx_mat_invert_rigid(const hx_mat_t *m, hx_mat_t *result);
 
-/* m by a turn about an axis: the turn is applied to the point first */
-void hx_mat_rotate_x(const hx_mat_t *m, hx_angle_t angle, hx_mat_t *result);
-void hx_mat_rotate_y(const hx_mat_t *m, hx_angle_t angle, hx_mat_t *result);
-void hx_mat_rotate_z(const hx_mat_t *m, hx_angle_t angle, hx_mat_t *result);
+/* m by a turn about an axis, the turn given as its sine and then its cosine */
+void hx_priv_mat_rotate_x(const hx_mat_t *m, const hx_fix14_t *turn, hx_mat_t *result);
+void hx_priv_mat_rotate_y(const hx_mat_t *m, const hx_fix14_t *turn, hx_mat_t *result);
+void hx_priv_mat_rotate_z(const hx_mat_t *m, const hx_fix14_t *turn, hx_mat_t *result);
 
-/* A turn about an axis, no translation */
+/* m by a turn about an axis: the turn is applied to the point first. The turn is by hx_sin and
+ * hx_cos of the angle */
+static inline void
+hx_mat_rotate_x(const hx_mat_t *m, hx_angle_t angle, hx_mat_t *result)
+{
+        const hx_fix14_t turn[2] = { hx_sin(angle), hx_cos(angle) };
+
+        hx_priv_mat_rotate_x(m, turn, result);
+}
+
+static inline void
+hx_mat_rotate_y(const hx_mat_t *m, hx_angle_t angle, hx_mat_t *result)
+{
+        const hx_fix14_t turn[2] = { hx_sin(angle), hx_cos(angle) };
+
+        hx_priv_mat_rotate_y(m, turn, result);
+}
+
+static inline void
+hx_mat_rotate_z(const hx_mat_t *m, hx_angle_t angle, hx_mat_t *result)
+{
+        const hx_fix14_t turn[2] = { hx_sin(angle), hx_cos(angle) };
+
+        hx_priv_mat_rotate_z(m, turn, result);
+}
+
+/* The same by hx_sin_fast and hx_cos_fast: the turn is that of the angle's top 12 bits */
+static inline void
+hx_mat_rotate_x_fast(const hx_mat_t *m, hx_angle_t angle, hx_mat_t *result)
+{
+        hx_priv_mat_rotate_x(m, hx_priv_sincos[(uint16_t)angle >> 4], result);
+}
+
+static inline void
+hx_mat_rotate_y_fast(const hx_mat_t *m, hx_angle_t angle, hx_mat_t *result)
+{
+        hx_priv_mat_rotate_y(m, hx_priv_sincos[(uint16_t)angle >> 4], result);
+}
+
+static inline void
+hx_mat_rotate_z_fast(const hx_mat_t *m, hx_angle_t angle, hx_mat_t *result)
+{
+        hx_priv_mat_rotate_z(m, hx_priv_sincos[(uint16_t)angle >> 4], result);
+}
+
+/* A turn about an axis, no translation, by hx_sin and hx_cos of the angle */
 void hx_mat_rotation_x(hx_angle_t angle, hx_mat_t *result);
 void hx_mat_rotation_y(hx_angle_t angle, hx_mat_t *result);
 void hx_mat_rotation_z(hx_angle_t angle, hx_mat_t *result);
+
+/* The same by hx_sin_fast and hx_cos_fast */
+void hx_mat_rotation_x_fast(hx_angle_t angle, hx_mat_t *result);
+void hx_mat_rotation_y_fast(hx_angle_t angle, hx_mat_t *result);
+void hx_mat_rotation_z_fast(hx_angle_t angle, hx_mat_t *result);
+
+/* The view below, the roll given as the sine and then the cosine of the roll negated, or as 0
+ * for no roll */
+void hx_priv_mat_lookat(const hx_vec3_t *eye, const hx_vec3_t *target, const hx_fix14_t *roll,
+    hx_mat_t *result);
 
 /* The view of a camera at eye that looks at target: target comes out on +z, eye at (0, 0, 0).
  * The camera stays level, its x along the ground, then turns about its line of sight by roll,
@@ -38,8 +93,27 @@ void hx_mat_rotation_z(hx_angle_t angle, hx_mat_t *result);
  * has no level: it is then taken as facing +z ahead of its tilt. With target at eye it faces +z.
  * The two are under 32768 apart on every axis: past that the difference does not fit and the
  * view faces elsewhere */
-void hx_mat_lookat(const hx_vec3_t *eye, const hx_vec3_t *target, hx_angle_t roll,
-    hx_mat_t *result);
+static inline void
+hx_mat_lookat(const hx_vec3_t *eye, const hx_vec3_t *target, hx_angle_t roll, hx_mat_t *result)
+{
+        if (roll == 0) {
+                hx_priv_mat_lookat(eye, target, 0, result);
+        } else {
+                const hx_angle_t back = (hx_angle_t)-roll;
+                const hx_fix14_t pair[2] = { hx_sin(back), hx_cos(back) };
+
+                hx_priv_mat_lookat(eye, target, pair, result);
+        }
+}
+
+/* The same with the roll by hx_sin_fast and hx_cos_fast, as hx_mat_rotation_z_fast turns */
+static inline void
+hx_mat_lookat_fast(const hx_vec3_t *eye, const hx_vec3_t *target, hx_angle_t roll,
+    hx_mat_t *result)
+{
+        hx_priv_mat_lookat(eye, target,
+            (roll == 0) ? 0 : hx_priv_sincos[(uint16_t)-roll >> 4], result);
+}
 
 /* v by m */
 void hx_mat_transform(const hx_mat_t *m, const hx_vtx_t *v, hx_vec3_t *result);

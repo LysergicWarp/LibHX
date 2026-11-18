@@ -8,7 +8,7 @@
 hx_fix16_t hx_ref_sqrt(hx_fix16_t value);
 hx_fix16_t hx_ref_rsqrt(hx_fix16_t value);
 
-hx_angle_t hx_ref_atan2(hx_fix16_t y, hx_fix16_t x);
+hx_angle_t hx_ref_atan2_fast(hx_fix16_t y, hx_fix16_t x);
 
 hx_fix16_t hx_ref_vec3_dot(const hx_vec3_t *a, const hx_vec3_t *b);
 void hx_ref_vec3_cross(const hx_vec3_t *a, const hx_vec3_t *b, hx_vec3_t *result);

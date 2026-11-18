@@ -1,5 +1,8 @@
-/* void hx_mat_lookat(const hx_vec3_t *eye, const hx_vec3_t *target, hx_angle_t roll,
- *     hx_mat_t *result)
+/* void hx_priv_mat_lookat(const hx_vec3_t *eye, const hx_vec3_t *target,
+ *     const hx_fix14_t *roll, hx_mat_t *result)
+ *
+ * roll is the sine and then the cosine of the roll negated, or 0 for no roll: hx_mat_lookat and
+ * its fast form in the header each bring their own.
  *
  * ref_lookat.c is the same in C, on length.h, and says what is worked out. Here:
  *
@@ -10,7 +13,7 @@
  *   r11, r12     the sizes of its x and z as given, raised by themselves, then the turn's sine
  *                and cosine
  *   r13          how far those two end above the three
- *   the frame    the direction as it was, for its signs, and the roll
+ *   the frame    the direction as it was, for its signs, and the roll as given
  *
  * T is set where a sum of squares is 2^28 or more and read again behind the reciprocal: nothing
  * in between changes it. */
@@ -198,7 +201,7 @@
         xtrct   r5, r4
         .endm
 
-        .section .text.hx_mat_lookat, "ax", @progbits
+        .section .text.hx_priv_mat_lookat, "ax", @progbits
 
         .align 2
 
@@ -253,9 +256,9 @@
         bra     .Lraised2
         add     #-2, r13
 
-        .global _hx_mat_lookat
-        .type _hx_mat_lookat, @function
-_hx_mat_lookat:
+        .global _hx_priv_mat_lookat
+        .type _hx_priv_mat_lookat, @function
+_hx_priv_mat_lookat:
         mov.l   r8, @-r15
         mov.l   r9, @-r15
         mov.l   r10, @-r15
@@ -438,7 +441,6 @@ _hx_mat_lookat:
         neg     r4, r4
         neg     r5, r5
         mov.l   @(FRAME_ROLL, r15), r0
-        exts.w  r0, r0
         tst     r0, r0
         bf      .Lroll
 
@@ -483,18 +485,11 @@ _hx_mat_lookat:
 .Lhalf:
         .long   0x00008000
 
-        /* The picture's turn, the other way: the table's entry hx_mat_rotation_z reads for it.
-         * The level x and y turn into one another, the sine in r2 and the cosine in r13 */
+        /* The picture's turn, the other way, as it was given. The level x and y turn into one
+         * another, the sine in r2 and the cosine in r13 */
 .Lroll:
-        neg     r0, r0
-        extu.w  r0, r0
-        shlr2   r0
-        shlr2   r0
-        shll2   r0
-        mov.l   .Lsincos, r1
-        add     r0, r1
-        mov.w   @r1+, r2
-        mov.w   @r1, r13
+        mov.w   @r0+, r2
+        mov.w   @r0, r13
 
         TURNED  r5, r11, 0
 
@@ -518,7 +513,3 @@ _hx_mat_lookat:
 
         bra     .Lmoved
         nop
-
-        .align 2
-.Lsincos:
-        .long   _hx_priv_sincos

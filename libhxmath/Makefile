@@ -8,8 +8,13 @@ endif
 HX_CC?= sh2eb-elf-gcc
 HX_AR?= sh2eb-elf-ar
 
+# The rules below are all there are
+MAKEFLAGS+= --no-builtin-rules
+.SUFFIXES:
+
 SRCS:= \
-	atan2.sx \
+	atan2.c \
+	atan2_fast.sx \
 	atan_table.c \
 	layout.c \
 	mat.c \
@@ -24,13 +29,14 @@ SRCS:= \
 	sincos_table.c \
 	sqrt.sx \
 	sqrt_table.c \
+	tan.c \
 	tan_table.c \
 	vec.c \
 	vec3_cross.sx \
 	vec3_normalize.sx
 
 REF_SRCS:= \
-	ref_atan2.c \
+	ref_atan2_fast.c \
 	ref_lookat.c \
 	ref_mat.c \
 	ref_sqrt.c \
@@ -77,5 +83,11 @@ $(HX_OUT)/%.o: ref/%.c | $(HX_OUT)
 
 $(HX_OUT):
 	mkdir -p $@
+
+# A source that is gone and that a dependency file in HX_OUT still names: its object is made anew
+# from what took its place
+src/%.c: ;
+src/%.sx: ;
+ref/%.c: ;
 
 -include $(OBJS:.o=.d) $(REF_OBJS:.o=.d)

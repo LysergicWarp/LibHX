@@ -108,9 +108,8 @@ INLINE void
 turned(const hx_mat_t *m, hx_angle_t angle, hx_mat_t *result, uint32_t from, uint32_t toward,
     uint32_t kept)
 {
-        const hx_fix14_t * const pair = hx_priv_sincos[(uint16_t)angle >> 4];
-        const int32_t sine = pair[0];
-        const int32_t cosine = pair[1];
+        const int32_t sine = hx_sin(angle);
+        const int32_t cosine = hx_cos(angle);
 
         for (uint32_t i = 0; i < 3U; i++) {
                 const int32_t a = m->rotation[i][from];

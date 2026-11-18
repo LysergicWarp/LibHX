@@ -6,7 +6,8 @@
  * - A matrix is applied as a row times the point, plus the translation.
  * - The result is the last argument. An aggregate comes back through it, a scalar by value.
  * - The plain name neither rounds to the nearest nor saturates. A form that does says so in its
- *   name.
+ *   name. The sine, cosine, tangent and atan2 are the exception: they are to the nearest under
+ *   their plain names, and the tangent gives its largest value where it has none.
  * - The plain name is accurate. A _fast form gives up accuracy for speed, by its name.
  * - SR's S bit is clear when a function is called. MACH and MACL are not kept. */
 

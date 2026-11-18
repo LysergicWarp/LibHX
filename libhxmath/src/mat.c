@@ -20,12 +20,9 @@ hx_mat_identity(hx_mat_t *result)
 
 /* The turn takes the axis "from" toward the axis "toward" and keeps the third */
 static inline __attribute__ ((always_inline)) void
-turn(hx_angle_t angle, hx_mat_t *result, uint32_t from, uint32_t toward, uint32_t kept)
+turn(hx_fix14_t sine, hx_fix14_t cosine, hx_mat_t *result, uint32_t from, uint32_t toward,
+    uint32_t kept)
 {
-        const hx_fix14_t * const pair = hx_priv_sincos[(uint16_t)angle >> 4];
-        const hx_fix14_t sine = pair[0];
-        const hx_fix14_t cosine = pair[1];
-
         result->rotation[kept][kept] = HX_FIX14(1.0);
         result->rotation[kept][from] = 0;
         result->rotation[kept][toward] = 0;
@@ -43,19 +40,37 @@ turn(hx_angle_t angle, hx_mat_t *result, uint32_t from, uint32_t toward, uint32_
 void
 hx_mat_rotation_x(hx_angle_t angle, hx_mat_t *result)
 {
-        turn(angle, result, 1, 2, 0);
+        turn(hx_sin(angle), hx_cos(angle), result, 1, 2, 0);
 }
 
 void
 hx_mat_rotation_y(hx_angle_t angle, hx_mat_t *result)
 {
-        turn(angle, result, 2, 0, 1);
+        turn(hx_sin(angle), hx_cos(angle), result, 2, 0, 1);
 }
 
 void
 hx_mat_rotation_z(hx_angle_t angle, hx_mat_t *result)
 {
-        turn(angle, result, 0, 1, 2);
+        turn(hx_sin(angle), hx_cos(angle), result, 0, 1, 2);
+}
+
+void
+hx_mat_rotation_x_fast(hx_angle_t angle, hx_mat_t *result)
+{
+        turn(hx_sin_fast(angle), hx_cos_fast(angle), result, 1, 2, 0);
+}
+
+void
+hx_mat_rotation_y_fast(hx_angle_t angle, hx_mat_t *result)
+{
+        turn(hx_sin_fast(angle), hx_cos_fast(angle), result, 2, 0, 1);
+}
+
+void
+hx_mat_rotation_z_fast(hx_angle_t angle, hx_mat_t *result)
+{
+        turn(hx_sin_fast(angle), hx_cos_fast(angle), result, 0, 1, 2);
 }
 
 /* A row of the rotation by (x, y, z): three products summed whole, then rounded down once to

@@ -1,14 +1,14 @@
-/* hx_angle_t hx_atan2(hx_fix16_t y, hx_fix16_t x)
+/* hx_angle_t hx_atan2_fast(hx_fix16_t y, hx_fix16_t x)
  *
- * ref_atan2.c is the same in C. r6 is the smaller size and r7 the larger, r1 the base and r3 the
- * sign, r2 the ratio. y's sign is taken last, as a negate. */
+ * ref_atan2_fast.c is the same in C. r6 is the smaller size and r7 the larger, r1 the base and r3
+ * the sign, r2 the ratio. y's sign is taken last, as a negate. */
 
         .text
 
         .align 2
-        .global _hx_atan2
-        .type _hx_atan2, @function
-_hx_atan2:
+        .global _hx_atan2_fast
+        .type _hx_atan2_fast, @function
+_hx_atan2_fast:
         cmp/pz  r4
         bt/s    1f
         mov     r4, r6

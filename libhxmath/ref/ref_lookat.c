@@ -135,11 +135,10 @@ hx_ref_mat_lookat(const hx_vec3_t *eye, const hx_vec3_t *target, hx_angle_t roll
                         result->rotation[1][i] = narrowed(down[i]);
                 }
         } else {
-                /* The picture's turn, the other way: the table's entry hx_mat_rotation_z reads for
-                 * it, so the two agree at every angle */
-                const hx_fix14_t * const pair = hx_priv_sincos[(uint16_t)-roll >> 4];
-                const int32_t sine = pair[0];
-                const int32_t cosine = pair[1];
+                /* The picture's turn, the other way: the sine and cosine hx_mat_rotation_z takes
+                 * for it, so the two agree at every angle */
+                const int32_t sine = hx_sin((hx_angle_t)-roll);
+                const int32_t cosine = hx_cos((hx_angle_t)-roll);
 
                 for (uint32_t i = 0; i < 3U; i++) {
                         result->rotation[0][i] = turned(across[i], cosine, down[i], -sine);

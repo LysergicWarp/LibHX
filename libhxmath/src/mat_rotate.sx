@@ -1,5 +1,6 @@
-/* void hx_mat_rotate_x(const hx_mat_t *m, hx_angle_t angle, hx_mat_t *result)
- * and _y, _z.
+/* void hx_priv_mat_rotate_x(const hx_mat_t *m, const hx_fix14_t *turn, hx_mat_t *result)
+ * and _y, _z. turn is the angle's sine and then its cosine: hx_mat_rotate_x and its fast form
+ * in the header each bring their own.
  *
  * ref_mat.c is the same in C. Two columns of the rotation change: with a the column of the axis
  * the turn takes from, b the one it takes toward,
@@ -33,12 +34,6 @@
         .global _\name
         .type _\name, @function
 _\name:
-        extu.w  r5, r5
-        shlr2   r5
-        shlr2   r5
-        shll2   r5
-        mov.l   9f, r0
-        add     r0, r5
         mov.w   @r5+, r1
         mov.w   @r5, r2
 
@@ -72,12 +67,8 @@ _\name:
         mov.l   @r4+, r0
         rts
         mov.l   r0, @(HX_MAT_TRANSLATION+HX_VEC3_Z, r6)
-
-        .align 2
-9:
-        .long   _hx_priv_sincos
         .endm
 
-        turn    hx_mat_rotate_x, k, a, b, 2, 4
-        turn    hx_mat_rotate_y, b, k, a, 4, 0
-        turn    hx_mat_rotate_z, a, b, k, 0, 2
+        turn    hx_priv_mat_rotate_x, k, a, b, 2, 4
+        turn    hx_priv_mat_rotate_y, b, k, a, 4, 0
+        turn    hx_priv_mat_rotate_z, a, b, k, 0, 2
