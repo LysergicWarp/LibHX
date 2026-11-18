@@ -1,0 +1,104 @@
+/* void hx_mat_transpose(const hx_mat_t *m, hx_mat_t *result)
+ * void hx_mat_invert_rigid(const hx_mat_t *m, hx_mat_t *result)
+ *
+ * ref_mat.c is the same in C. SR's S bit is taken as clear. Every word is read before the place
+ * it goes to is written, so the result may be m. */
+
+        .text
+
+        /* The rotation as four longs and a word. A long's halves are swapped, and xtrct takes
+         * the low half of one with the high half of the next, which pairs the words anew. */
+        .align 2
+        .global _hx_mat_transpose
+        .type _hx_mat_transpose, @function
+_hx_mat_transpose:
+        mov.l   @r4+, r0
+        mov.l   @r4+, r1
+        mov.l   @r4+, r2
+        mov.l   @r4+, r3
+        mov.w   @r4, r7
+        swap.w  r0, r6
+        swap.w  r0, r0
+        swap.w  r1, r1
+        swap.w  r2, r2
+        swap.w  r3, r3
+        xtrct   r3, r6
+        xtrct   r2, r3
+        xtrct   r1, r2
+        xtrct   r0, r1
+        mov.l   r1, @(0, r5)
+        mov.l   r6, @(4, r5)
+        mov.l   r3, @(8, r5)
+        mov.l   r2, @(12, r5)
+        mov     r7, r0
+        mov.w   r0, @(16, r5)
+        mov     #0, r0
+        mov.l   r0, @(20, r5)
+        mov.l   r0, @(24, r5)
+        rts
+        mov.l   r0, @(28, r5)
+
+        /* A word of the transposed rotation: to its place at r5 and, shifted up 2, to its long
+         * on the stack */
+        .macro  placed place
+        mov.w   r0, @(\place, r5)
+        shll2   r0
+        mov.l   r0, @(2*\place, r15)
+        .endm
+
+        /* The translation turned back: the transposed rotation goes onto the stack as longs as
+         * it is placed, and each row is walked against the translation by mac.l. The sum is
+         * negated whole. The first two results wait in r6 and r7 until the translation has been
+         * read for the last time. */
+        .align 2
+        .global _hx_mat_invert_rigid
+        .type _hx_mat_invert_rigid, @function
+_hx_mat_invert_rigid:
+        add     #-36, r15
+        mov.w   @r4+, r0
+        placed  0
+        mov.w   @r4+, r1
+        mov.w   @r4+, r2
+        mov.w   @r4+, r0
+        placed  2
+        mov.w   @r4+, r0
+        placed  8
+        mov.w   @r4+, r3
+        mov.w   @r4+, r0
+        placed  4
+        mov.w   @r4+, r0
+        placed  10
+        mov.w   @r4+, r0
+        placed  16
+        mov     r1, r0
+        placed  6
+        mov     r2, r0
+        placed  12
+        mov     r3, r0
+        placed  14
+        mov     r4, r3
+        add     #2, r3
+        mov     r15, r2
+
+        .irp    held, r6, r7, r0
+        clrmac
+        mac.l   @r2+, @r3+
+        mac.l   @r2+, @r3+
+        mac.l   @r2+, @r3+
+        sts     macl, r0
+        sts     mach, r1
+        clrt
+        negc    r0, r0
+        negc    r1, r1
+        xtrct   r1, r0
+        .ifnc   \held, r0
+        mov     r0, \held
+        add     #-12, r3
+        .endif
+        .endr
+
+        mov.l   r0, @(28, r5)
+        mov.l   r6, @(20, r5)
+        mov.l   r7, @(24, r5)
+        rts
+        add     #36, r15

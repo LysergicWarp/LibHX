@@ -1,0 +1,229 @@
+/* void hx_vec3_normalize(const hx_vec3_t *v, hx_vec3_t *result)
+ * void hx_vec3_normalize_round(const hx_vec3_t *v, hx_vec3_t *result)
+ *
+ * ref_vec3.c is the same in C, on length.h. The two are one text made twice, the second with
+ * the half that rounds to the nearest, in r7.
+ *
+ * r1 to r3 are the sizes of x, y and z.
+ *
+ * T is set where the squares' sum is 2^28 or more and read again in the Newton step: nothing
+ * between the two changes it. The same holds from a sign's compare to its branch at the end.
+ * The work under a multiply is whatever does not need its product. */
+
+        .macro  NORMALIZE name, round
+
+        .section .text.\name, "ax", @progbits
+
+        .align 2
+
+        /* (0, 0, 0) stays as it is. r0 is 0 */
+.Lzero_\name:
+        mov.l   r0, @r5
+        mov.l   r0, @(4, r5)
+        rts
+        mov.l   r0, @(8, r5)
+
+        /* 2^30 or more: down by 1, and by 1 again from 2^31 */
+.Ldown_\name:
+        shlr    r1
+        shlr    r2
+        cmp/pz  r0
+        bt.s    1f
+        shlr    r3
+        shlr    r1
+        shlr    r2
+        shlr    r3
+1:
+        bra     .Lscaled_\name
+        mov.l   r9, @-r15
+
+        .global _\name
+        .type _\name, @function
+_\name:
+        mov.l   @r4, r1
+        mov.l   @(4, r4), r2
+        mov.l   @(8, r4), r3
+
+        /* The sizes. A branch's slot has the next one's compare */
+        cmp/pz  r1
+        bt.s    1f
+        cmp/pz  r2
+        neg     r1, r1
+1:
+        bt.s    2f
+        cmp/pz  r3
+        neg     r2, r2
+2:
+        bt.s    3f
+        mov     r1, r0
+        neg     r3, r3
+3:
+        or      r2, r0
+        or      r3, r0
+        tst     r0, r0
+        bt      .Lzero_\name
+
+        /* The largest into 2^29 to 2^30, by 16, 8, 4, 2 and 1. r0 has every bit of the three,
+         * r6 the bits that are clear in a value that needs the step, shifted on in the slots */
+        mov.l   .Ltop_\name, r6
+        cmp/hi  r6, r0
+        bt      .Ldown_\name
+        mov.w   .Lmask_\name, r6
+        tst     r6, r0
+        bf.s    4f
+        shll8   r6
+        shll16  r0
+        shll16  r1
+        shll16  r2
+        shll16  r3
+4:
+        tst     r6, r0
+        bf.s    5f
+        shll2   r6
+        shll8   r0
+        shll8   r1
+        shll8   r2
+        shll8   r3
+5:
+        shll2   r6
+        tst     r6, r0
+        bf.s    6f
+        shll2   r6
+        shll2   r0
+        shll2   r1
+        shll2   r2
+        shll2   r3
+        shll2   r0
+        shll2   r1
+        shll2   r2
+        shll2   r3
+6:
+        tst     r6, r0
+        bf.s    7f
+        shll    r6
+        shll2   r0
+        shll2   r1
+        shll2   r2
+        shll2   r3
+7:
+        tst     r6, r0
+        bf.s    .Lscaled_\name
+        mov.l   r9, @-r15
+        shll    r1
+        shll    r2
+        shll    r3
+
+.Lscaled_\name:
+        /* The squares' high halves, summed in r8 */
+        dmulu.l r1, r1
+        mov.l   .Ltable_\name, r9
+        mov.l   r8, @-r15
+        sts     mach, r8
+        dmulu.l r2, r2
+        mov.l   .Ltop_\name, r6
+        sts     mach, r0
+        dmulu.l r3, r3
+        add     r0, r8
+        .if     \round
+        mov     #64, r7
+        add     r7, r7
+        .endif
+        sts     mach, r0
+        add     r0, r8
+
+        /* Up by 2 or by 4 into 2^30 to 2^32. T stays set for a sum of 2^28 or more */
+        shll2   r8
+        cmp/hi  r6, r8
+        bt      8f
+        shll2   r8
+8:
+        /* One over the root, the table's guess: the entry by the top 8 bits, down its step by
+         * the 8 below. Only the low word of r6 counts */
+        mov     r8, r0
+        shlr16  r0
+        extu.b  r0, r6
+        shlr8   r0
+        shll2   r0
+        add     r0, r9
+        mov.w   @(2, r9), r0
+        mulu.w  r6, r0
+        mov.w   @r9, r6
+        mov.l   .Lthree_\name, r9
+        sts     macl, r0
+        shlr8   r0
+        sub     r0, r6
+
+        /* A Newton step: the guess by 3 less the value by the guess's square. The guess goes
+         * in 4 down, which leaves the reciprocal as 2^56 over the length, and 1 more where the
+         * sum was 2^28 or more */
+        mulu.w  r6, r6
+        shll16  r6
+        shlr2   r6
+        shlr2   r6
+        bf.s    9f
+        sts     macl, r0
+        shlr    r6
+9:
+        dmulu.l r8, r0
+        mov.l   @r15+, r8
+        sts     mach, r0
+        sub     r0, r9
+        dmulu.l r6, r9
+        mov.l   @(8, r4), r0
+        cmp/pz  r0
+        sts     mach, r9
+
+        /* Each size by the reciprocal is its result by 2^40. A coordinate's sign is read from
+         * v again under the multiply ahead of its own, and v is read before result is written
+         * there */
+        dmulu.l r9, r3
+        mov.l   @(4, r4), r0
+        sts     mach, r3
+        dmulu.l r9, r2
+        .if     \round
+        add     r7, r3
+        .endif
+        shlr8   r3
+        bt.s    1f
+        cmp/pz  r0
+        neg     r3, r3
+1:
+        sts     mach, r2
+        dmulu.l r9, r1
+        mov.l   r3, @(8, r5)
+        mov.l   @r4, r0
+        .if     \round
+        add     r7, r2
+        .endif
+        shlr8   r2
+        bt.s    2f
+        cmp/pz  r0
+        neg     r2, r2
+2:
+        sts     mach, r1
+        mov.l   r2, @(4, r5)
+        .if     \round
+        add     r7, r1
+        .endif
+        shlr8   r1
+        bt.s    3f
+        mov.l   @r15+, r9
+        neg     r1, r1
+3:
+        rts
+        mov.l   r1, @r5
+
+        .align 2
+.Ltop_\name:
+        .long   0x3FFFFFFF
+.Ltable_\name:
+        .long   _hx_priv_reciprocal_roots - 256
+.Lthree_\name:
+        .long   0xC0000000
+.Lmask_\name:
+        .word   0xC000
+
+        .endm
+
+        NORMALIZE hx_vec3_normalize, 0
+        NORMALIZE hx_vec3_normalize_round, 1

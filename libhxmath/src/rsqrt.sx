@@ -1,0 +1,89 @@
+/* hx_fix16_t hx_rsqrt(hx_fix16_t value)
+ *
+ * ref_sqrt.c is the same in C, on length.h. r4 is the value shifted up, r5 the scale that takes
+ * the result back up. r0 walks the constants, each step loading the next one's in its branch's
+ * slot, as hx_sqrt does. */
+
+        .section .text.hx_rsqrt, "ax", @progbits
+
+        .align 2
+        .global _hx_rsqrt
+        .type _hx_rsqrt, @function
+_hx_rsqrt:
+        cmp/pl  r4
+        bf      .Lnone
+        mova    .Lpool, r0
+        mov.l   @r0+, r5
+
+        /* Up by an even count into 2^30 to 2^32 */
+        mov.l   @r0+, r1
+        cmp/hi  r1, r4
+        bt/s    1f
+        mov.l   @r0+, r1
+        shll16  r4
+        shll8   r5
+1:
+        cmp/hi  r1, r4
+        bt/s    2f
+        mov.l   @r0+, r1
+        shll8   r4
+        shll2   r5
+        shll2   r5
+2:
+        cmp/hi  r1, r4
+        bt/s    3f
+        mov.l   @r0+, r1
+        shll2   r4
+        shll2   r4
+        shll2   r5
+3:
+        cmp/hi  r1, r4
+        bt/s    4f
+        mov.l   @r0+, r2
+        shll2   r4
+        shll    r5
+4:
+        /* The table's guess: the entry by the top 8 bits, down its step by the 8 below. Only
+         * the low word of r1 counts */
+        mov.l   @r0, r3
+        mov     r4, r0
+        shlr16  r0
+        extu.b  r0, r1
+        shlr8   r0
+        shll2   r0
+        add     r0, r2
+        mov.w   @(2, r2), r0
+        mulu.w  r1, r0
+        mov.w   @r2, r1
+        sts     macl, r0
+        shlr8   r0
+        sub     r0, r1
+
+        /* A Newton step: the guess by 3 less the value by the guess's square */
+        mulu.w  r1, r1
+        shll16  r1
+        sts     macl, r0
+        dmulu.l r4, r0
+        sts     mach, r0
+        sub     r0, r3
+        dmulu.l r1, r3
+        sts     mach, r0
+
+        /* By the scale */
+        dmulu.l r0, r5
+        rts
+        sts     mach, r0
+
+.Lnone:
+        rts
+        mov     #0, r0
+
+        .align 2
+.Lpool:
+        .long   0x00000400
+        .long   0x0000FFFF
+        .long   0x00FFFFFF
+        .long   0x0FFFFFFF
+        .long   0x3FFFFFFF
+        .long   _hx_priv_reciprocal_roots - 256
+        .long   0xC0000000

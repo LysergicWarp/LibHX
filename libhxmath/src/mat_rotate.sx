@@ -1,0 +1,81 @@
+/* void hx_mat_rotate_x(const hx_mat_t *m, hx_angle_t angle, hx_mat_t *result)
+ * and _y, _z.
+ *
+ * ref_mat.c is the same in C. Two columns of the rotation change: with a the column of the axis
+ * the turn takes from, b the one it takes toward,
+ *   a' = a cos + b sin
+ *   b' = b cos - a sin
+ * A row is read whole before it is written, so the result may be m.
+ *
+ * r1 is the sine, r2 the cosine, r3 a, r5 b. */
+
+        /* One column of a row, by what it is: k kept, a, b */
+        .macro  take what, offset
+        .ifc    \what, k
+        mov.w   @r4+, r0
+        mov.w   r0, @(\offset, r6)
+        .endif
+        .ifc    \what, a
+        mov.w   @r4+, r3
+        .endif
+        .ifc    \what, b
+        mov.w   @r4+, r5
+        .endif
+        .endm
+
+        /* The three columns by what they are, and the offsets in a row of a and b. A section a
+         * turn, so a program links only the ones it calls */
+        .macro  turn name, first, second, third, from, toward
+        .section .text.\name, "ax", @progbits
+        .align 2
+        .global _\name
+        .type _\name, @function
+_\name:
+        extu.w  r5, r5
+        shlr2   r5
+        shlr2   r5
+        shll2   r5
+        mov.l   9f, r0
+        add     r0, r5
+        mov.w   @r5+, r1
+        mov.w   @r5, r2
+
+        .irp    row, 0, 1, 2
+        take    \first, 6*\row
+        take    \second, 6*\row+2
+        take    \third, 6*\row+4
+        muls.w  r3, r2
+        sts     macl, r0
+        muls.w  r5, r1
+        sts     macl, r7
+        add     r7, r0
+        shll2   r0
+        shlr16  r0
+        mov.w   r0, @(6*\row+\from, r6)
+        muls.w  r5, r2
+        sts     macl, r0
+        muls.w  r3, r1
+        sts     macl, r7
+        sub     r7, r0
+        shll2   r0
+        shlr16  r0
+        mov.w   r0, @(6*\row+\toward, r6)
+        .endr
+
+        add     #2, r4
+        mov.l   @r4+, r0
+        mov.l   r0, @(20, r6)
+        mov.l   @r4+, r0
+        mov.l   r0, @(24, r6)
+        mov.l   @r4+, r0
+        rts
+        mov.l   r0, @(28, r6)
+
+        .align 2
+9:
+        .long   _hx_priv_sincos
+        .endm
+
+        turn    hx_mat_rotate_x, k, a, b, 2, 4
+        turn    hx_mat_rotate_y, b, k, a, 4, 0
+        turn    hx_mat_rotate_z, a, b, k, 0, 2

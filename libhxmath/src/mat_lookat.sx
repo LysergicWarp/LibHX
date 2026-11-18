@@ -1,0 +1,522 @@
+/* void hx_mat_lookat(const hx_vec3_t *eye, const hx_vec3_t *target, hx_angle_t roll,
+ *     hx_mat_t *result)
+ *
+ * ref_lookat.c is the same in C, on length.h, and says what is worked out. Here:
+ *
+ *   r8 to r10    the eye, to the end
+ *   r14          the result: its rotation is stored last word first, then read back a row at
+ *                a time for the translation
+ *   r1 to r3     the direction's sizes, raised together
+ *   r11, r12     the sizes of its x and z as given, raised by themselves, then the turn's sine
+ *                and cosine
+ *   r13          how far those two end above the three
+ *   the frame    the direction as it was, for its signs, and the roll
+ *
+ * T is set where a sum of squares is 2^28 or more and read again behind the reciprocal: nothing
+ * in between changes it. */
+
+#define FRAME_X    0
+#define FRAME_Y    4
+#define FRAME_Z    8
+#define FRAME_ROLL 12
+#define FRAME_SIZE 16
+
+        /* Two or three sizes up together until the largest is in 2^29 to 2^30, by 16, 8, 4, 2
+         * and 1, r13 counting. r0 has every bit of them, r6 the bits that are clear in a value
+         * that needs the step, shifted on in the slots */
+        .macro  RAISE down, done, a, b, c
+        mov.l   .Ltop, r6
+        cmp/hi  r6, r0
+        bt      \down
+        mov.l   .Lmask, r6
+        tst     r6, r0
+        bf.s    71f
+        shll8   r6
+        shll16  r0
+        shll16  \a
+        shll16  \b
+        .ifnb   \c
+        shll16  \c
+        .endif
+        add     #16, r13
+71:
+        tst     r6, r0
+        bf.s    72f
+        shll2   r6
+        shll8   r0
+        shll8   \a
+        shll8   \b
+        .ifnb   \c
+        shll8   \c
+        .endif
+        add     #8, r13
+72:
+        shll2   r6
+        tst     r6, r0
+        bf.s    73f
+        shll2   r6
+        .rept   2
+        shll2   r0
+        shll2   \a
+        shll2   \b
+        .ifnb   \c
+        shll2   \c
+        .endif
+        .endr
+        add     #4, r13
+73:
+        tst     r6, r0
+        bf.s    74f
+        shll    r6
+        shll2   r0
+        shll2   \a
+        shll2   \b
+        .ifnb   \c
+        shll2   \c
+        .endif
+        add     #2, r13
+74:
+        tst     r6, r0
+        bf      \done
+        shll    \a
+        shll    \b
+        .ifnb   \c
+        shll    \c
+        .endif
+        add     #1, r13
+\done:
+        .endm
+
+        /* One over the root of v, 2^30 to 2^32, as a share of 2^31 in b: the table's guess and
+         * a Newton step. a and r0 are worked in. Changes no T */
+        .macro  KERNEL v, a, b
+        mov     \v, r0
+        shlr16  r0
+        extu.b  r0, \a
+        shlr8   r0
+        shll2   r0
+        mov.l   .Ltable, \b
+        add     r0, \b
+        mov.w   @(2, \b), r0
+        mulu.w  \a, r0
+        mov.w   @\b, \a
+        mov.l   .Lthree, \b
+        sts     macl, r0
+        shlr8   r0
+        sub     r0, \a
+        mulu.w  \a, \a
+        shll16  \a
+        sts     macl, r0
+        dmulu.l \v, r0
+        sts     mach, r0
+        sub     r0, \b
+        dmulu.l \a, \b
+        sts     mach, \b
+        .endm
+
+        /* A 2.30 product of two signed 2.30 values, rounded down, in "into". r0 is worked in */
+        .macro  PRODUCT_READ into
+        sts     macl, r0
+        sts     mach, \into
+        .endm
+
+        .macro  PRODUCT_SHIFT into
+        shll    r0
+        rotcl   \into
+        shll    r0
+        rotcl   \into
+        .endm
+
+        /* A 2.30 value as 2.14 to the nearest, stored ahead of r14. r1 is the half */
+        .macro  NARROW value
+        add     r1, \value
+        shlr16  \value
+        mov.w   \value, @-r14
+        .endm
+
+        /* r1:r0, a sum of 2.30 by 2.14 products, as 2.14 to the nearest, stored ahead of r14 */
+        .macro  TURNED_STORE
+        shll    r0
+        rotcl   r1
+        shll    r0
+        rotcl   r1
+        shll    r0
+        movt    r0
+        add     r0, r1
+        mov.w   r1, @-r14
+        .endm
+
+        /* a by the cosine, r13, plus or less b by the sine, r2 */
+        .macro  TURNED a, b, less
+        dmuls.l \a, r13
+        sts     macl, r0
+        sts     mach, r1
+        dmuls.l \b, r2
+        sts     macl, r6
+        sts     mach, r7
+        clrt
+        .if     \less
+        subc    r6, r0
+        subc    r7, r1
+        .else
+        addc    r6, r0
+        addc    r7, r1
+        .endif
+        TURNED_STORE
+        .endm
+
+        /* The row at r14 by the eye, negated whole and rounded down once, 16.16 in r4: the
+         * first product negated and the other two taken off it, each under the next multiply */
+        .macro  ROW
+        mov.w   @r14+, r0
+        dmuls.l r0, r8
+        mov.w   @r14+, r0
+        mov.w   @r14+, r6
+        sts     macl, r4
+        sts     mach, r5
+        dmuls.l r0, r9
+        clrt
+        negc    r4, r4
+        negc    r5, r5
+        sts     macl, r0
+        sts     mach, r7
+        dmuls.l r6, r10
+        clrt
+        subc    r0, r4
+        subc    r7, r5
+        sts     macl, r0
+        sts     mach, r7
+        clrt
+        subc    r0, r4
+        subc    r7, r5
+        shll    r4
+        rotcl   r5
+        shll    r4
+        rotcl   r5
+        xtrct   r5, r4
+        .endm
+
+        .section .text.hx_mat_lookat, "ax", @progbits
+
+        .align 2
+
+        /* A target at the eye: level, facing +z */
+.Lnowhere:
+        mov     #64, r3
+        shll16  r3
+        shll8   r3
+        bra     .Lahead
+        mov     #0, r2
+
+        /* The three were 2^30 or more: down by 1, and by 1 again from 2^31 */
+.Ldown3:
+        shlr    r1
+        shlr    r2
+        shlr    r3
+        cmp/pz  r0
+        bf      81f
+        bra     .Lraised3
+        add     #-1, r13
+81:
+        shlr    r1
+        shlr    r2
+        shlr    r3
+        bra     .Lraised3
+        add     #-2, r13
+
+        /* Straight along y: no level to go by, so facing +z ahead of the tilt */
+.Lsteep:
+        mov     #64, r2
+        shll16  r2
+        shll8   r2
+        mov     #0, r3
+.Lahead:
+        mov     #64, r12
+        shll16  r12
+        shll8   r12
+        bra     .Lsigns
+        mov     #0, r11
+
+        /* The same for the two */
+.Ldown2:
+        shlr    r11
+        shlr    r12
+        cmp/pz  r0
+        bf      82f
+        bra     .Lraised2
+        add     #-1, r13
+82:
+        shlr    r11
+        shlr    r12
+        bra     .Lraised2
+        add     #-2, r13
+
+        .global _hx_mat_lookat
+        .type _hx_mat_lookat, @function
+_hx_mat_lookat:
+        mov.l   r8, @-r15
+        mov.l   r9, @-r15
+        mov.l   r10, @-r15
+        mov.l   r11, @-r15
+        mov.l   r12, @-r15
+        mov.l   r13, @-r15
+        mov.l   r14, @-r15
+        add     #-FRAME_SIZE, r15
+
+        mov.l   @r4, r8
+        mov.l   @(4, r4), r9
+        mov.l   @(8, r4), r10
+        mov.l   @r5, r1
+        mov.l   @(4, r5), r2
+        mov.l   @(8, r5), r3
+        mov     r7, r14
+        mov.l   r6, @(FRAME_ROLL, r15)
+        sub     r8, r1
+        sub     r9, r2
+        sub     r10, r3
+        mov.l   r1, @(FRAME_X, r15)
+        mov.l   r2, @(FRAME_Y, r15)
+        mov.l   r3, @(FRAME_Z, r15)
+
+        /* The sizes. A branch's slot has the next one's compare */
+        cmp/pz  r1
+        bt.s    1f
+        cmp/pz  r2
+        neg     r1, r1
+1:
+        bt.s    2f
+        cmp/pz  r3
+        neg     r2, r2
+2:
+        bt.s    3f
+        mov     r1, r0
+        neg     r3, r3
+3:
+        or      r2, r0
+        or      r3, r0
+        tst     r0, r0
+        bt      .Lnowhere
+
+        /* The level part starts from x and z as given: what the three lose on their way down
+         * is not lost to it */
+        mov     r1, r11
+        mov     r3, r12
+        mov     #0, r13
+        RAISE   .Ldown3, .Lraised3, r1, r2, r3
+
+        mov     r11, r0
+        or      r12, r0
+        tst     r0, r0
+        bt      .Lsteep
+        neg     r13, r13
+        RAISE   .Ldown2, .Lraised2, r11, r12
+
+        /* The level length: one over it in r7 as 2^60 over it, twice it in r5 */
+        dmulu.l r11, r11
+        mov.l   .Ltop, r6
+        sts     mach, r4
+        dmulu.l r12, r12
+        sts     mach, r0
+        add     r0, r4
+        shll2   r4
+        cmp/hi  r6, r4
+        bt      1f
+        shll2   r4
+1:
+        KERNEL  r4, r5, r7
+        dmulu.l r4, r7
+        sts     mach, r5
+        bf.s    2f
+        shll    r5
+        shlr    r7
+        shll    r5
+2:
+        /* The turn's sine and cosine: x and z by it, 2.30 */
+        dmulu.l r11, r7
+        sts     mach, r11
+        dmulu.l r12, r7
+        mov     r5, r7
+        shll2   r11
+        sts     mach, r12
+        shll2   r12
+
+        /* The whole length: 2^60 over it in r6 */
+        dmulu.l r1, r1
+        mov.l   .Ltop, r6
+        sts     mach, r4
+        dmulu.l r2, r2
+        sts     mach, r0
+        dmulu.l r3, r3
+        add     r0, r4
+        sts     mach, r0
+        add     r0, r4
+        shll2   r4
+        cmp/hi  r6, r4
+        bt      3f
+        shll2   r4
+3:
+        KERNEL  r4, r5, r6
+        bf      4f
+        shlr    r6
+4:
+        /* The tilt's sine, y by it, and its cosine, the level length by it and back down by
+         * how far the level part went above the three */
+        dmulu.l r2, r6
+        sts     mach, r2
+        dmulu.l r7, r6
+        shll2   r2
+        sts     mach, r3
+        shll    r3
+        tst     r13, r13
+        bt      .Lsigns
+        mov     r13, r0
+        tst     #16, r0
+        bt.s    5f
+        tst     #8, r0
+        shlr16  r3
+5:
+        bt.s    6f
+        tst     #4, r0
+        shlr8   r3
+6:
+        bt.s    7f
+        tst     #2, r0
+        shlr2   r3
+        shlr2   r3
+7:
+        bt.s    8f
+        tst     #1, r0
+        shlr2   r3
+8:
+        bt      .Lsigns
+        shlr    r3
+
+        /* r11 and r12 the turn's sine and cosine, r2 and r3 the tilt's, sizes alone. The turn
+         * takes x's sign and z's, the tilt y's */
+.Lsigns:
+        mov.l   @(FRAME_X, r15), r0
+        cmp/pz  r0
+        mov.l   @(FRAME_Z, r15), r0
+        bt.s    1f
+        cmp/pz  r0
+        neg     r11, r11
+1:
+        mov.l   @(FRAME_Y, r15), r0
+        bt.s    2f
+        cmp/pz  r0
+        neg     r12, r12
+2:
+        bt      3f
+        neg     r2, r2
+3:
+        /* Sine by sine in r4, cosine by sine in r5, sine by cosine in r6, cosine by cosine in
+         * r7, the turn's first */
+        dmuls.l r11, r2
+        PRODUCT_READ r4
+        dmuls.l r12, r2
+        PRODUCT_SHIFT r4
+        PRODUCT_READ r5
+        dmuls.l r11, r3
+        PRODUCT_SHIFT r5
+        PRODUCT_READ r6
+        dmuls.l r12, r3
+        PRODUCT_SHIFT r6
+        PRODUCT_READ r7
+        PRODUCT_SHIFT r7
+
+        /* The camera's z in the world, the last row, stored first */
+        mov.l   .Lhalf, r1
+        add     #18, r14
+        NARROW  r7
+        NARROW  r2
+        NARROW  r6
+
+        /* Its x and y, level: (r12, 0, r11) and (r4, r3, r5) */
+        neg     r11, r11
+        neg     r4, r4
+        neg     r5, r5
+        mov.l   @(FRAME_ROLL, r15), r0
+        exts.w  r0, r0
+        tst     r0, r0
+        bf      .Lroll
+
+        NARROW  r5
+        NARROW  r3
+        NARROW  r4
+        NARROW  r11
+        mov.w   r0, @-r14
+        NARROW  r12
+
+        /* The eye taken off, by the rotation as it came out */
+.Lmoved:
+        ROW
+        mov     r4, r1
+        ROW
+        mov     r4, r2
+        ROW
+        add     #2, r14
+        mov.l   r1, @r14
+        mov.l   r2, @(4, r14)
+        mov.l   r4, @(8, r14)
+
+        add     #FRAME_SIZE, r15
+        mov.l   @r15+, r14
+        mov.l   @r15+, r13
+        mov.l   @r15+, r12
+        mov.l   @r15+, r11
+        mov.l   @r15+, r10
+        mov.l   @r15+, r9
+        rts
+        mov.l   @r15+, r8
+
+        .align 2
+.Ltop:
+        .long   0x3FFFFFFF
+.Lmask:
+        .long   0xFFFFC000
+.Ltable:
+        .long   _hx_priv_reciprocal_roots - 256
+.Lthree:
+        .long   0xC0000000
+.Lhalf:
+        .long   0x00008000
+
+        /* The picture's turn, the other way: the table's entry hx_mat_rotation_z reads for it.
+         * The level x and y turn into one another, the sine in r2 and the cosine in r13 */
+.Lroll:
+        neg     r0, r0
+        extu.w  r0, r0
+        shlr2   r0
+        shlr2   r0
+        shll2   r0
+        mov.l   .Lsincos, r1
+        add     r0, r1
+        mov.w   @r1+, r2
+        mov.w   @r1, r13
+
+        TURNED  r5, r11, 0
+
+        dmuls.l r3, r13
+        sts     macl, r0
+        sts     mach, r1
+        TURNED_STORE
+
+        TURNED  r4, r12, 0
+        TURNED  r11, r5, 1
+
+        dmuls.l r3, r2
+        sts     macl, r0
+        sts     mach, r1
+        clrt
+        negc    r0, r0
+        negc    r1, r1
+        TURNED_STORE
+
+        TURNED  r12, r4, 1
+
+        bra     .Lmoved
+        nop
+
+        .align 2
+.Lsincos:
+        .long   _hx_priv_sincos

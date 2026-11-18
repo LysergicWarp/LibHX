@@ -1,0 +1,92 @@
+/* void hx_mat_transform(const hx_mat_t *m, const hx_vtx_t *v, hx_vec3_t *result)
+ * hx_fix16_t hx_mat_project(const hx_mat_t *m, const hx_vtx_t *v, hx_fix16_t distance,
+ *     hx_screen_t *result)
+ *
+ * ref_view.c is the same in C. SR's S bit is taken as clear.
+ *
+ * A 2.14 row by a 14.2 point is 16.16 as it stands, so a row's translation goes into MACL ahead
+ * of its three products by mac.w and the sum is read from there. MACH is never read. */
+
+        .section .text.hx_mat_transform, "ax", @progbits
+
+        .align 2
+        .global _hx_mat_transform
+        .type _hx_mat_transform, @function
+_hx_mat_transform:
+        mov     r4, r1
+        add     #20, r1
+
+        .irp    row, 0, 1
+        lds.l   @r1+, macl
+        mac.w   @r4+, @r5+
+        mac.w   @r4+, @r5+
+        mac.w   @r4+, @r5+
+        add     #-6, r5
+        sts     macl, r0
+        mov.l   r0, @(4*\row, r6)
+        .endr
+
+        lds.l   @r1+, macl
+        mac.w   @r4+, @r5+
+        mac.w   @r4+, @r5+
+        mac.w   @r4+, @r5+
+        sts     macl, r0
+        rts
+        mov.l   r0, @(8, r6)
+
+/* z's row first: the divide of the distance by it runs under the other two rows. r3 is the divide
+ * unit. A product of a row's sum and the quotient has the pixels in its high half. */
+
+        .section .text.hx_mat_project, "ax", @progbits
+
+        .align 2
+        .global _hx_mat_project
+        .type _hx_mat_project, @function
+_hx_mat_project:
+        mov     r4, r1
+        add     #28, r1
+        mov     r4, r2
+        add     #12, r2
+        lds.l   @r1+, macl
+        mac.w   @r2+, @r5+
+        mac.w   @r2+, @r5+
+        mac.w   @r2+, @r5+
+        mov.l   .Ldivider, r3
+        add     #-6, r5
+        sts     macl, r0
+
+        mov.l   r0, @r3
+        mov     r6, r2
+        shlr16  r2
+        exts.w  r2, r2
+        mov.l   r2, @(16, r3)
+        shll16  r6
+        mov.l   r6, @(20, r3)
+
+        mov     r4, r1
+        add     #20, r1
+        lds.l   @r1+, macl
+        mac.w   @r4+, @r5+
+        mac.w   @r4+, @r5+
+        mac.w   @r4+, @r5+
+        add     #-6, r5
+        sts     macl, r2
+        lds.l   @r1+, macl
+        mac.w   @r4+, @r5+
+        mac.w   @r4+, @r5+
+        mac.w   @r4+, @r5+
+        sts     macl, r5
+
+        mov.l   @(20, r3), r6
+        dmuls.l r2, r6
+        sts     mach, r2
+        mov.w   r2, @r7
+        dmuls.l r5, r6
+        add     #2, r7
+        sts     mach, r5
+        rts
+        mov.w   r5, @r7
+
+        .align 2
+.Ldivider:
+        .long   0xFFFFFF00

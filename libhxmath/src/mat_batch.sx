@@ -1,0 +1,165 @@
+/* void hx_mat_transform_batch(const hx_mat_t *m, const hx_vtx_t *source, uint32_t count,
+ *     hx_vec3_t *result)
+ * void hx_mat_project_batch(const hx_mat_t *m, const hx_vtx_t *source, uint32_t count,
+ *     hx_fix16_t distance, hx_projected_t *result)
+ *
+ * ref_view.c is the same in C. SR's S bit is taken as clear.
+ *
+ * A point is made as in mat_transform.sx: a row's translation into MACL, then its three products
+ * by mac.w. The translation is kept in registers, and r4 walks the rotation and is taken back
+ * once a point. */
+
+        /* A row of the matrix at r4 by the point at r5, the translation given */
+        .macro  ROW translation
+        lds     \translation, macl
+        mac.w   @r4+, @r5+
+        mac.w   @r4+, @r5+
+        mac.w   @r4+, @r5+
+        .endm
+
+/* r1, r3 and r8 are the translation. x and y wait in r0 and r2 until z is made: a point is
+ * written from its end down, z out of MACL itself. */
+
+        .section .text.hx_mat_transform_batch, "ax", @progbits
+
+        .align 2
+        .global _hx_mat_transform_batch
+        .type _hx_mat_transform_batch, @function
+_hx_mat_transform_batch:
+        tst     r6, r6
+        bt      2f
+        mov.l   r8, @-r15
+        mov.l   @(20, r4), r1
+        mov.l   @(24, r4), r3
+        mov.l   @(28, r4), r8
+        add     #12, r7
+
+        .align 2
+1:
+        ROW     r1
+        add     #-6, r5
+        sts     macl, r0
+        ROW     r3
+        add     #-6, r5
+        sts     macl, r2
+        ROW     r8
+        add     #-18, r4
+        dt      r6
+        sts.l   macl, @-r7
+        mov.l   r2, @-r7
+        mov.l   r0, @-r7
+        bf.s    1b
+        add     #24, r7
+
+        rts
+        mov.l   @r15+, r8
+2:
+        rts
+        nop
+
+/* The divide of the distance by a point's z runs under the x and y of that point and the z of
+ * the next one, so the unit is not waited for from the second point on. The last point has no
+ * next one and is made by itself.
+ *
+ * r2, r8 and r9 are the translation, r3 the divide unit, r12 and r13 the distance as the unit's
+ * dividend. r10 and r11 are the x and y that wait for the quotient. r7 is 4 into the point
+ * being written: its z was written when it was made.
+ *
+ * y's pixel is written as a long, the product's high half out of MACH: its low word lands where
+ * y is and x is written over the other. */
+
+        .section .text.hx_mat_project_batch, "ax", @progbits
+
+        .align 2
+        .global _hx_mat_project_batch
+        .type _hx_mat_project_batch, @function
+_hx_mat_project_batch:
+        tst     r6, r6
+        bt      3f
+        mov.l   r8, @-r15
+        mov.l   r9, @-r15
+        mov.l   r10, @-r15
+        mov.l   r11, @-r15
+        mov.l   r12, @-r15
+        mov.l   r13, @-r15
+        mov.l   @(24, r15), r0
+        mov     r7, r12
+        shlr16  r12
+        exts.w  r12, r12
+        mov     r7, r13
+        shll16  r13
+        mov     r0, r7
+        add     #4, r7
+        mov.l   .Ldivider, r3
+        mov.l   @(20, r4), r2
+        mov.l   @(24, r4), r8
+        mov.l   @(28, r4), r9
+
+        /* The first point's z, and its divide started */
+        add     #12, r4
+        ROW     r9
+        add     #-18, r4
+        add     #-6, r5
+        sts     macl, r1
+        mov.l   r1, @r3
+        mov.l   r12, @(16, r3)
+        mov.l   r13, @(20, r3)
+        dt      r6
+        bt.s    2f
+        mov.l   r1, @r7
+
+        .align 2
+1:
+        ROW     r2
+        add     #-6, r5
+        sts     macl, r10
+        ROW     r8
+        dt      r6
+        sts     macl, r11
+
+        /* The next point's z. Its divide starts as soon as this point's quotient is read */
+        ROW     r9
+        add     #-18, r4
+        add     #-6, r5
+        sts     macl, r1
+        mov.l   @(20, r3), r0
+        mov.l   r1, @r3
+        mov.l   r12, @(16, r3)
+        mov.l   r13, @(20, r3)
+
+        dmuls.l r11, r0
+        mov.l   r1, @(8, r7)
+        sts.l   mach, @-r7
+        dmuls.l r10, r0
+        sts     mach, r1
+        mov.w   r1, @r7
+        bf.s    1b
+        add     #12, r7
+
+        /* The last point. Registers come back under its multiplies */
+2:
+        ROW     r2
+        add     #-6, r5
+        sts     macl, r10
+        ROW     r8
+        mov.l   @r15+, r13
+        mov.l   @r15+, r12
+        sts     macl, r11
+        mov.l   @(20, r3), r0
+        dmuls.l r11, r0
+        mov.l   @r15+, r11
+        sts.l   mach, @-r7
+        dmuls.l r10, r0
+        mov.l   @r15+, r10
+        mov.l   @r15+, r9
+        sts     mach, r1
+        mov.l   @r15+, r8
+        rts
+        mov.w   r1, @r7
+3:
+        rts
+        nop
+
+        .align 2
+.Ldivider:
+        .long   0xFFFFFF00

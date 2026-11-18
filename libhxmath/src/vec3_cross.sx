@@ -1,0 +1,64 @@
+/* void hx_vec3_cross(const hx_vec3_t *a, const hx_vec3_t *b, hx_vec3_t *result)
+ *
+ * ref_vec3.c is the same in C.
+ *
+ * A coordinate is two products taken apart whole, then the middle of what is left: the first
+ * product in r0 and r1, the second taken off it through r7. Behind every multiply come the next
+ * one's loads and the last coordinate's store, so no read of the product waits for it. r2 keeps
+ * the coordinate of a that the next multiply takes again. */
+
+        .section .text.hx_vec3_cross, "ax", @progbits
+
+        .align 2
+        .global _hx_vec3_cross
+        .type _hx_vec3_cross, @function
+_hx_vec3_cross:
+        /* x: a's y by b's z, less a's z by b's y */
+        mov.l   @(4, r4), r0
+        mov.l   @(8, r5), r1
+        dmuls.l r0, r1
+        mov.l   @(8, r4), r2
+        mov.l   @(4, r5), r3
+        sts     mach, r0
+        sts     macl, r1
+        dmuls.l r2, r3
+        mov.l   @(0, r5), r3
+        clrt
+        sts     macl, r7
+        subc    r7, r1
+        sts     mach, r7
+        subc    r7, r0
+
+        /* y: a's z by b's x, less a's x by b's z */
+        dmuls.l r2, r3
+        xtrct   r0, r1
+        mov.l   r1, @(0, r6)
+        mov.l   @(0, r4), r2
+        mov.l   @(8, r5), r3
+        sts     mach, r0
+        sts     macl, r1
+        dmuls.l r2, r3
+        mov.l   @(4, r5), r3
+        clrt
+        sts     macl, r7
+        subc    r7, r1
+        sts     mach, r7
+        subc    r7, r0
+
+        /* z: a's x by b's y, less a's y by b's x */
+        dmuls.l r2, r3
+        xtrct   r0, r1
+        mov.l   r1, @(4, r6)
+        mov.l   @(4, r4), r2
+        mov.l   @(0, r5), r3
+        sts     mach, r0
+        sts     macl, r1
+        dmuls.l r2, r3
+        clrt
+        sts     macl, r7
+        subc    r7, r1
+        sts     mach, r7
+        subc    r7, r0
+        xtrct   r0, r1
+        rts
+        mov.l   r1, @(8, r6)

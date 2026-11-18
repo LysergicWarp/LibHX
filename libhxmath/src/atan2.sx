@@ -1,0 +1,73 @@
+/* hx_angle_t hx_atan2(hx_fix16_t y, hx_fix16_t x)
+ *
+ * ref_atan2.c is the same in C. r6 is the smaller size and r7 the larger, r1 the base and r3 the
+ * sign, r2 the ratio. y's sign is taken last, as a negate. */
+
+        .text
+
+        .align 2
+        .global _hx_atan2
+        .type _hx_atan2, @function
+_hx_atan2:
+        cmp/pz  r4
+        bt/s    1f
+        mov     r4, r6
+        neg     r4, r6
+1:
+        mov     #0, r1
+        cmp/pz  r5
+        mov     #0, r3
+        bt/s    2f
+        mov     r5, r7
+        neg     r5, r7
+        mov.w   .Lhalf, r1
+        mov     #-1, r3
+2:
+        cmp/hi  r7, r6
+        bf/s    3f
+        mov     #0, r2
+        mov     r6, r0
+        mov     r7, r6
+        mov     r0, r7
+        mov.w   .Lquarter, r1
+        not     r3, r3
+3:
+        tst     r7, r7
+        bt      .Lnone
+
+        /* 11 bits of the smaller over the larger, the last left in T */
+        div0u
+        div1    r7, r6
+        .rept 10
+        rotcl   r2
+        div1    r7, r6
+        .endr
+
+        /* The arc at the ratio's nearest step */
+        movt    r0
+        add     r0, r2
+        mov.l   .Larcs, r0
+        add     r2, r2
+        mov.w   @(r0, r2), r0
+        xor     r3, r0
+        sub     r3, r0
+        cmp/pz  r4
+        bt/s    4f
+        add     r1, r0
+        neg     r0, r0
+4:
+        rts
+        exts.w  r0, r0
+
+.Lnone:
+        rts
+        mov     #0, r0
+
+        .align 1
+.Lquarter:
+        .word   0x4000
+.Lhalf:
+        .word   0x8000
+        .align 2
+.Larcs:
+        .long   _hx_priv_arcs
