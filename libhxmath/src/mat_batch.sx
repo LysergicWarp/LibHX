@@ -9,6 +9,8 @@
  * by mac.w. The translation is kept in registers, and r4 walks the rotation and is taken back
  * once a point. */
 
+#include "layout.h"
+
         /* A row of the matrix at r4 by the point at r5, the translation given */
         .macro  ROW translation
         lds     \translation, macl
@@ -29,27 +31,27 @@ _hx_mat_transform_batch:
         tst     r6, r6
         bt      2f
         mov.l   r8, @-r15
-        mov.l   @(20, r4), r1
-        mov.l   @(24, r4), r3
-        mov.l   @(28, r4), r8
-        add     #12, r7
+        mov.l   @(HX_MAT_TRANSLATION+HX_VEC3_X, r4), r1
+        mov.l   @(HX_MAT_TRANSLATION+HX_VEC3_Y, r4), r3
+        mov.l   @(HX_MAT_TRANSLATION+HX_VEC3_Z, r4), r8
+        add     #HX_VEC3_SIZE, r7
 
         .align 2
 1:
         ROW     r1
-        add     #-6, r5
+        add     #-HX_VTX_SIZE, r5
         sts     macl, r0
         ROW     r3
-        add     #-6, r5
+        add     #-HX_VTX_SIZE, r5
         sts     macl, r2
         ROW     r8
-        add     #-18, r4
+        add     #-HX_MAT_ROTATION_SIZE, r4
         dt      r6
         sts.l   macl, @-r7
         mov.l   r2, @-r7
         mov.l   r0, @-r7
         bf.s    1b
-        add     #24, r7
+        add     #2*HX_VEC3_SIZE, r7
 
         rts
         mov.l   @r15+, r8
@@ -89,17 +91,17 @@ _hx_mat_project_batch:
         mov     r7, r13
         shll16  r13
         mov     r0, r7
-        add     #4, r7
+        add     #HX_PROJECTED_Z, r7
         mov.l   .Ldivider, r3
-        mov.l   @(20, r4), r2
-        mov.l   @(24, r4), r8
-        mov.l   @(28, r4), r9
+        mov.l   @(HX_MAT_TRANSLATION+HX_VEC3_X, r4), r2
+        mov.l   @(HX_MAT_TRANSLATION+HX_VEC3_Y, r4), r8
+        mov.l   @(HX_MAT_TRANSLATION+HX_VEC3_Z, r4), r9
 
         /* The first point's z, and its divide started */
-        add     #12, r4
+        add     #2*HX_MAT_ROW_SIZE, r4
         ROW     r9
-        add     #-18, r4
-        add     #-6, r5
+        add     #-HX_MAT_ROTATION_SIZE, r4
+        add     #-HX_VTX_SIZE, r5
         sts     macl, r1
         mov.l   r1, @r3
         mov.l   r12, @(16, r3)
@@ -111,7 +113,7 @@ _hx_mat_project_batch:
         .align 2
 1:
         ROW     r2
-        add     #-6, r5
+        add     #-HX_VTX_SIZE, r5
         sts     macl, r10
         ROW     r8
         dt      r6
@@ -119,8 +121,8 @@ _hx_mat_project_batch:
 
         /* The next point's z. Its divide starts as soon as this point's quotient is read */
         ROW     r9
-        add     #-18, r4
-        add     #-6, r5
+        add     #-HX_MAT_ROTATION_SIZE, r4
+        add     #-HX_VTX_SIZE, r5
         sts     macl, r1
         mov.l   @(20, r3), r0
         mov.l   r1, @r3
@@ -128,18 +130,18 @@ _hx_mat_project_batch:
         mov.l   r13, @(20, r3)
 
         dmuls.l r11, r0
-        mov.l   r1, @(8, r7)
+        mov.l   r1, @(HX_PROJECTED_SIZE, r7)
         sts.l   mach, @-r7
         dmuls.l r10, r0
         sts     mach, r1
         mov.w   r1, @r7
         bf.s    1b
-        add     #12, r7
+        add     #HX_PROJECTED_SIZE+HX_PROJECTED_Z, r7
 
         /* The last point. Registers come back under its multiplies */
 2:
         ROW     r2
-        add     #-6, r5
+        add     #-HX_VTX_SIZE, r5
         sts     macl, r10
         ROW     r8
         mov.l   @r15+, r13

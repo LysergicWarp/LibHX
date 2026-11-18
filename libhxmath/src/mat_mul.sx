@@ -9,6 +9,8 @@
  *
  * r7 is what the rotation's sums start from, 0 or half a last place. r3 walks b's translation. */
 
+#include "layout.h"
+
         .text
 
         .align 2
@@ -25,27 +27,27 @@ _hx_mat_mul:
         mov     #0, r7
 .Lmultiply:
         mov     r5, r3
-        add     #20, r3
+        add     #HX_MAT_TRANSLATION, r3
         add     #-12, r15
 
         .irp    row, 0, 1, 2
         .irp    column, 0, 1, 2
         lds     r7, macl
         mac.w   @r4+, @r5+
-        add     #4, r5
+        add     #HX_MAT_ROW_SIZE-2, r5
         mac.w   @r4+, @r5+
-        add     #4, r5
+        add     #HX_MAT_ROW_SIZE-2, r5
         mac.w   @r4+, @r5+
         sts     macl, r0
         .if     \column == 2
-        add     #-18, r5
+        add     #-HX_MAT_ROTATION_SIZE, r5
         .else
-        add     #-12, r5
+        add     #-2*HX_MAT_ROW_SIZE, r5
         .endif
         shll2   r0
-        add     #-6, r4
+        add     #-HX_MAT_ROW_SIZE, r4
         shlr16  r0
-        mov.w   r0, @(6*\row+2*\column, r6)
+        mov.w   r0, @(HX_MAT_ROW_SIZE*\row+2*\column, r6)
         .endr
 
         mov.w   @r4+, r0
@@ -65,15 +67,16 @@ _hx_mat_mul:
         mac.l   @r2+, @r3+
         mac.l   @r2+, @r3+
         mac.l   @r2+, @r3+
-        mov     #14-2*\row, r0
+        /* a's translation from r4, which is past this row */
+        mov     #HX_MAT_TRANSLATION+4*\row-HX_MAT_ROW_SIZE*(\row+1), r0
         mov.l   @(r0, r4), r2
         sts     mach, r1
         sts     macl, r0
         xtrct   r1, r0
         add     r2, r0
-        mov.l   r0, @(20+4*\row, r6)
+        mov.l   r0, @(HX_MAT_TRANSLATION+4*\row, r6)
         .if     \row < 2
-        add     #-12, r3
+        add     #-HX_VEC3_SIZE, r3
         .endif
         .endr
 

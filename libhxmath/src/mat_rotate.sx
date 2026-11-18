@@ -9,6 +9,8 @@
  *
  * r1 is the sine, r2 the cosine, r3 a, r5 b. */
 
+#include "layout.h"
+
         /* One column of a row, by what it is: k kept, a, b */
         .macro  take what, offset
         .ifc    \what, k
@@ -41,9 +43,9 @@ _\name:
         mov.w   @r5, r2
 
         .irp    row, 0, 1, 2
-        take    \first, 6*\row
-        take    \second, 6*\row+2
-        take    \third, 6*\row+4
+        take    \first, HX_MAT_ROW_SIZE*\row
+        take    \second, HX_MAT_ROW_SIZE*\row+2
+        take    \third, HX_MAT_ROW_SIZE*\row+4
         muls.w  r3, r2
         sts     macl, r0
         muls.w  r5, r1
@@ -51,7 +53,7 @@ _\name:
         add     r7, r0
         shll2   r0
         shlr16  r0
-        mov.w   r0, @(6*\row+\from, r6)
+        mov.w   r0, @(HX_MAT_ROW_SIZE*\row+\from, r6)
         muls.w  r5, r2
         sts     macl, r0
         muls.w  r3, r1
@@ -59,17 +61,17 @@ _\name:
         sub     r7, r0
         shll2   r0
         shlr16  r0
-        mov.w   r0, @(6*\row+\toward, r6)
+        mov.w   r0, @(HX_MAT_ROW_SIZE*\row+\toward, r6)
         .endr
 
-        add     #2, r4
+        add     #HX_MAT_TRANSLATION-HX_MAT_ROTATION_SIZE, r4
         mov.l   @r4+, r0
-        mov.l   r0, @(20, r6)
+        mov.l   r0, @(HX_MAT_TRANSLATION+HX_VEC3_X, r6)
         mov.l   @r4+, r0
-        mov.l   r0, @(24, r6)
+        mov.l   r0, @(HX_MAT_TRANSLATION+HX_VEC3_Y, r6)
         mov.l   @r4+, r0
         rts
-        mov.l   r0, @(28, r6)
+        mov.l   r0, @(HX_MAT_TRANSLATION+HX_VEC3_Z, r6)
 
         .align 2
 9:

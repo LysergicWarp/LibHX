@@ -15,6 +15,8 @@
  * T is set where a sum of squares is 2^28 or more and read again behind the reciprocal: nothing
  * in between changes it. */
 
+#include "layout.h"
+
 #define FRAME_X    0
 #define FRAME_Y    4
 #define FRAME_Z    8
@@ -264,11 +266,11 @@ _hx_mat_lookat:
         add     #-FRAME_SIZE, r15
 
         mov.l   @r4, r8
-        mov.l   @(4, r4), r9
-        mov.l   @(8, r4), r10
+        mov.l   @(HX_VEC3_Y, r4), r9
+        mov.l   @(HX_VEC3_Z, r4), r10
         mov.l   @r5, r1
-        mov.l   @(4, r5), r2
-        mov.l   @(8, r5), r3
+        mov.l   @(HX_VEC3_Y, r5), r2
+        mov.l   @(HX_VEC3_Z, r5), r3
         mov     r7, r14
         mov.l   r6, @(FRAME_ROLL, r15)
         sub     r8, r1
@@ -426,7 +428,7 @@ _hx_mat_lookat:
 
         /* The camera's z in the world, the last row, stored first */
         mov.l   .Lhalf, r1
-        add     #18, r14
+        add     #HX_MAT_ROTATION_SIZE, r14
         NARROW  r7
         NARROW  r2
         NARROW  r6
@@ -454,10 +456,10 @@ _hx_mat_lookat:
         ROW
         mov     r4, r2
         ROW
-        add     #2, r14
+        add     #HX_MAT_TRANSLATION-HX_MAT_ROTATION_SIZE, r14
         mov.l   r1, @r14
-        mov.l   r2, @(4, r14)
-        mov.l   r4, @(8, r14)
+        mov.l   r2, @(HX_VEC3_Y, r14)
+        mov.l   r4, @(HX_VEC3_Z, r14)
 
         add     #FRAME_SIZE, r15
         mov.l   @r15+, r14

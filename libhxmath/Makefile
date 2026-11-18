@@ -11,6 +11,7 @@ HX_AR?= sh2eb-elf-ar
 SRCS:= \
 	atan2.sx \
 	atan_table.c \
+	layout.c \
 	mat.c \
 	mat_batch.sx \
 	mat_invert.sx \
@@ -69,7 +70,7 @@ $(HX_OUT)/%.o: src/%.c | $(HX_OUT)
 	$(HX_CC) $(CFLAGS) -MMD -MP -c -o $@ $<
 
 $(HX_OUT)/%.o: src/%.sx | $(HX_OUT)
-	$(HX_CC) -m2 -mb -c -o $@ $<
+	$(HX_CC) -m2 -mb -MMD -MP -c -o $@ $<
 
 $(HX_OUT)/%.o: ref/%.c | $(HX_OUT)
 	$(HX_CC) $(CFLAGS) -Iref/include -Isrc -MMD -MP -c -o $@ $<

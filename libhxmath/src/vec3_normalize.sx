@@ -10,6 +10,8 @@
  * between the two changes it. The same holds from a sign's compare to its branch at the end.
  * The work under a multiply is whatever does not need its product. */
 
+#include "layout.h"
+
         .macro  NORMALIZE name, round
 
         .section .text.\name, "ax", @progbits
@@ -19,9 +21,9 @@
         /* (0, 0, 0) stays as it is. r0 is 0 */
 .Lzero_\name:
         mov.l   r0, @r5
-        mov.l   r0, @(4, r5)
+        mov.l   r0, @(HX_VEC3_Y, r5)
         rts
-        mov.l   r0, @(8, r5)
+        mov.l   r0, @(HX_VEC3_Z, r5)
 
         /* 2^30 or more: down by 1, and by 1 again from 2^31 */
 .Ldown_\name:
@@ -41,8 +43,8 @@
         .type _\name, @function
 _\name:
         mov.l   @r4, r1
-        mov.l   @(4, r4), r2
-        mov.l   @(8, r4), r3
+        mov.l   @(HX_VEC3_Y, r4), r2
+        mov.l   @(HX_VEC3_Z, r4), r3
 
         /* The sizes. A branch's slot has the next one's compare */
         cmp/pz  r1
@@ -169,7 +171,7 @@ _\name:
         sts     mach, r0
         sub     r0, r9
         dmulu.l r6, r9
-        mov.l   @(8, r4), r0
+        mov.l   @(HX_VEC3_Z, r4), r0
         cmp/pz  r0
         sts     mach, r9
 
@@ -177,7 +179,7 @@ _\name:
          * v again under the multiply ahead of its own, and v is read before result is written
          * there */
         dmulu.l r9, r3
-        mov.l   @(4, r4), r0
+        mov.l   @(HX_VEC3_Y, r4), r0
         sts     mach, r3
         dmulu.l r9, r2
         .if     \round
@@ -190,7 +192,7 @@ _\name:
 1:
         sts     mach, r2
         dmulu.l r9, r1
-        mov.l   r3, @(8, r5)
+        mov.l   r3, @(HX_VEC3_Z, r5)
         mov.l   @r4, r0
         .if     \round
         add     r7, r2
@@ -201,7 +203,7 @@ _\name:
         neg     r2, r2
 2:
         sts     mach, r1
-        mov.l   r2, @(4, r5)
+        mov.l   r2, @(HX_VEC3_Y, r5)
         .if     \round
         add     r7, r1
         .endif

@@ -1,6 +1,6 @@
 # libhxmath
 
-Fixed-point math for the SH-2, in C and assembly. It depends on `stdint.h` alone.
+Fixed-point math for the SH-2, in C and assembly. Its public headers depend on `stdint.h` alone.
 
 ## Layout
 

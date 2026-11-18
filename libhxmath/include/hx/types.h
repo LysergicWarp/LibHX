@@ -11,6 +11,9 @@ typedef int16_t hx_fix2_t;  /* 14.2 */
 /* 65536 a turn */
 typedef int16_t hx_angle_t;
 
+/* The assembly is written to the layouts of the types below. The library's build checks them
+ * against src/layout.h, and a type changed here takes its functions with it */
+
 typedef struct {
         hx_fix16_t x;
         hx_fix16_t y;

@@ -4,10 +4,13 @@
  * ref_mat.c is the same in C. SR's S bit is taken as clear. Every word is read before the place
  * it goes to is written, so the result may be m. */
 
+#include "layout.h"
+
         .text
 
-        /* The rotation as four longs and a word. A long's halves are swapped, and xtrct takes
-         * the low half of one with the high half of the next, which pairs the words anew. */
+        /* The rotation as four longs and a word, at their own offsets in it. A long's halves are
+         * swapped, and xtrct takes the low half of one with the high half of the next, which
+         * pairs the words anew. */
         .align 2
         .global _hx_mat_transpose
         .type _hx_mat_transpose, @function
@@ -33,17 +36,17 @@ _hx_mat_transpose:
         mov     r7, r0
         mov.w   r0, @(16, r5)
         mov     #0, r0
-        mov.l   r0, @(20, r5)
-        mov.l   r0, @(24, r5)
+        mov.l   r0, @(HX_MAT_TRANSLATION+HX_VEC3_X, r5)
+        mov.l   r0, @(HX_MAT_TRANSLATION+HX_VEC3_Y, r5)
         rts
-        mov.l   r0, @(28, r5)
+        mov.l   r0, @(HX_MAT_TRANSLATION+HX_VEC3_Z, r5)
 
         /* A word of the transposed rotation: to its place at r5 and, shifted up 2, to its long
          * on the stack */
-        .macro  placed place
-        mov.w   r0, @(\place, r5)
+        .macro  placed row, column
+        mov.w   r0, @(HX_MAT_ROW_SIZE*\row+2*\column, r5)
         shll2   r0
-        mov.l   r0, @(2*\place, r15)
+        mov.l   r0, @(12*\row+4*\column, r15)
         .endm
 
         /* The translation turned back: the transposed rotation goes onto the stack as longs as
@@ -56,28 +59,28 @@ _hx_mat_transpose:
 _hx_mat_invert_rigid:
         add     #-36, r15
         mov.w   @r4+, r0
-        placed  0
+        placed  0, 0
         mov.w   @r4+, r1
         mov.w   @r4+, r2
         mov.w   @r4+, r0
-        placed  2
+        placed  0, 1
         mov.w   @r4+, r0
-        placed  8
+        placed  1, 1
         mov.w   @r4+, r3
         mov.w   @r4+, r0
-        placed  4
+        placed  0, 2
         mov.w   @r4+, r0
-        placed  10
+        placed  1, 2
         mov.w   @r4+, r0
-        placed  16
+        placed  2, 2
         mov     r1, r0
-        placed  6
+        placed  1, 0
         mov     r2, r0
-        placed  12
+        placed  2, 0
         mov     r3, r0
-        placed  14
+        placed  2, 1
         mov     r4, r3
-        add     #2, r3
+        add     #HX_MAT_TRANSLATION-HX_MAT_ROTATION_SIZE, r3
         mov     r15, r2
 
         .irp    held, r6, r7, r0
@@ -93,12 +96,12 @@ _hx_mat_invert_rigid:
         xtrct   r1, r0
         .ifnc   \held, r0
         mov     r0, \held
-        add     #-12, r3
+        add     #-HX_VEC3_SIZE, r3
         .endif
         .endr
 
-        mov.l   r0, @(28, r5)
-        mov.l   r6, @(20, r5)
-        mov.l   r7, @(24, r5)
+        mov.l   r0, @(HX_MAT_TRANSLATION+HX_VEC3_Z, r5)
+        mov.l   r6, @(HX_MAT_TRANSLATION+HX_VEC3_X, r5)
+        mov.l   r7, @(HX_MAT_TRANSLATION+HX_VEC3_Y, r5)
         rts
         add     #36, r15
