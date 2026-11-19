@@ -46,6 +46,12 @@ REF_SRCS:= \
 OBJS:= $(patsubst %,$(HX_OUT)/%.o,$(basename $(SRCS)))
 REF_OBJS:= $(patsubst %,$(HX_OUT)/%.o,$(basename $(REF_SRCS)))
 
+# The same source gives the same archives wherever it is built. Debug data from the compiler names
+# the folder of the build as libhxmath, and a source file relative to it. The compiler takes that
+# folder from PWD, which a build entered through a link has as the link.
+PATHMAP:= -ffile-prefix-map='$(CURDIR)'=libhxmath
+export PWD:= $(CURDIR)
+
 CFLAGS:= \
 	-std=c11 \
 	-m2 \
@@ -58,25 +64,27 @@ CFLAGS:= \
 	-Wall \
 	-Wextra \
 	-Wshadow \
+	$(PATHMAP) \
 	-Iinclude
 
 .PHONY: all
 
 all: $(HX_OUT)/libhxmath.a $(HX_OUT)/libhxmath_ref.a
 
+# D: no time, owner or mode of a member in the archive
 $(HX_OUT)/libhxmath.a: $(OBJS)
 	rm -f $@
-	$(HX_AR) rcs $@ $^
+	$(HX_AR) rcsD $@ $^
 
 $(HX_OUT)/libhxmath_ref.a: $(REF_OBJS)
 	rm -f $@
-	$(HX_AR) rcs $@ $^
+	$(HX_AR) rcsD $@ $^
 
 $(HX_OUT)/%.o: src/%.c | $(HX_OUT)
 	$(HX_CC) $(CFLAGS) -MMD -MP -c -o $@ $<
 
 $(HX_OUT)/%.o: src/%.sx | $(HX_OUT)
-	$(HX_CC) -m2 -mb -MMD -MP -c -o $@ $<
+	$(HX_CC) -m2 -mb $(PATHMAP) -MMD -MP -c -o $@ $<
 
 $(HX_OUT)/%.o: ref/%.c | $(HX_OUT)
 	$(HX_CC) $(CFLAGS) -Iref/include -Isrc -MMD -MP -c -o $@ $<

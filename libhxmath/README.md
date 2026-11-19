@@ -17,3 +17,7 @@ Fixed-point math for the SH-2, in C and assembly. Its public headers depend on `
 `make HX_OUT=<folder>` builds `libhxmath.a` and `libhxmath_ref.a` into that folder, with
 `HX_CC` and `HX_AR` as the SH-2 compiler and archiver. Nothing is written beside the sources.
 A program that links the references puts `libhxmath_ref.a` ahead of `libhxmath.a`.
+
+The same sources and toolchain give the same archives, byte for byte, wherever the clone and
+`HX_OUT` are. Debug data from the compiler names the build folder as `libhxmath`, and source files
+relative to it.
