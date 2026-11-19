@@ -84,12 +84,21 @@ RUN mkdir /src/gcc /build-gcc \
 
 # ar, nm and ranlib load GCC's plugin from here on their own, so they read objects that hold
 # link-time optimisation data alone. The versions are recorded as the tools report them.
+#
+# The last line of versions.txt names the toolchain: one checksum over every file under the
+# prefix but versions.txt, and every link. An image's ID changes with each build of it, and this
+# line does not while the files stay the same.
 RUN mkdir -p $T/lib/bfd-plugins \
     && ln -s ../../libexec/gcc/sh2eb-elf/${GCC_VERSION}/liblto_plugin.so $T/lib/bfd-plugins/ \
     && test -e $T/lib/bfd-plugins/liblto_plugin.so \
     && { sh2eb-elf-as --version | head -n 1 \
         && sh2eb-elf-ld --version | head -n 1 \
-        && sh2eb-elf-gcc --version | head -n 1; } > $T/versions.txt
+        && sh2eb-elf-gcc --version | head -n 1; } > $T/versions.txt \
+    && cd $T \
+    && find . -type f ! -path ./versions.txt -exec sha256sum {} + > /tmp/files.txt \
+    && find . -type l -printf '%l  %p\n' >> /tmp/files.txt \
+    && LC_ALL=C sort -k 2 /tmp/files.txt | sha256sum | sed -e 's/ .*//' -e 's/^/files sha256:/' >> versions.txt \
+    && rm /tmp/files.txt
 
 FROM base
 ARG BINUTILS_VERSION
