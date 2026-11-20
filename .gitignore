@@ -1,0 +1,4 @@
+# The test script's builds and results, and a build in a program's own folder
+/out/
+build/
+!/build/

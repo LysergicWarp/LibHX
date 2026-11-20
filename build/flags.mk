@@ -1,10 +1,8 @@
 # The flags of the SDK's own libraries. A library's Makefile includes this from its own folder,
 # one below the clone's root.
 #
-# HX_CC, HX_CXX and HX_AR are the SH-2 compilers and archiver. The header check alone uses HX_CXX.
-HX_CC?= sh2eb-elf-gcc
-HX_CXX?= sh2eb-elf-g++
-HX_AR?= sh2eb-elf-ar
+# The header check alone uses HX_CXX.
+include ../build/fixed.mk
 
 # The rules a Makefile gives are all there are
 MAKEFLAGS+= --no-builtin-rules
@@ -12,32 +10,6 @@ MAKEFLAGS+= --no-builtin-rules
 
 # The library's folder name
 HX_LIBRARY:= $(lastword $(subst /, ,$(CURDIR)))
-
-# The SH-2, big-endian, GCC's default calling convention and no C library. Each function and
-# object gets a section of its own, so a link can drop what a program does not use. Address 0 is
-# the BIOS ROM and reads without a fault, so a check for a null pointer is never taken as proven
-# by an access through that pointer.
-HX_FIXED:= \
-	-m2 \
-	-mb \
-	-ffreestanding \
-	-ffunction-sections \
-	-fdata-sections \
-	-fno-delete-null-pointer-checks
-
-# Warnings, all of them errors in the SDK's own sources
-HX_WARNINGS:= \
-	-Wall \
-	-Wextra \
-	-Wshadow \
-	-Wundef \
-	-Wvla \
-	-Wdouble-promotion \
-	-Werror
-
-HX_C_WARNINGS:= \
-	-Wstrict-prototypes \
-	-Wmissing-prototypes
 
 # The same source gives the same archives wherever it is built. Debug data from the compiler names
 # the clone as LibHX, and a source file relative to its library's folder. The compiler takes the

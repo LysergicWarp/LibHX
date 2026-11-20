@@ -1,0 +1,113 @@
+/* The program's first instructions, where the BIOS enters the file it loaded.
+ *
+ * The BIOS leaves its own vector table in place, interrupts open at the SH-2, and the stack
+ * the disc's header names or one of its own. All of that but the stack is main's to find. */
+
+#include <hx/hw/sh2/cache.h>
+
+        .section .text.hx_start, "ax", @progbits
+
+        .align 2
+        .global _hx_start
+        .type _hx_start, @function
+_hx_start:
+        mov.l   .Lstack_end, r15
+
+        /* The cache off, purged and on, as three writes: CCR is written with the cache off or
+         * going off. Four ways, instructions and data both */
+        mov.l   .Lccr, r1
+        mov     #0, r0
+        mov.b   r0, @r1
+        mov     #SH2_CCR_CP, r0
+        mov.b   r0, @r1
+        mov     #SH2_CCR_CE, r0
+        mov.b   r0, @r1
+
+        mov.l   .Lbss, r1
+        mov.l   .Lbss_end, r2
+        bsr     .Lclear
+        nop
+        mov.l   .Llow_ram_bss, r1
+        mov.l   .Llow_ram_bss_end, r2
+        bsr     .Lclear
+        nop
+
+        /* Work RAM-L's initial values, from the loaded file. r4 counts the longs. r0 is how
+         * far a long's own place is from its place in the file, less the 4 that the load
+         * has moved on by when the long is stored */
+        mov.l   .Llow_ram_data, r0
+        mov.l   .Llow_ram_data_end, r4
+        mov.l   .Llow_ram_data_load, r3
+        sub     r0, r4
+        shlr2   r4
+        tst     r4, r4
+        bt      2f
+        sub     r3, r0
+        add     #-4, r0
+1:
+        mov.l   @r3+, r5
+        dt      r4
+        bf/s    1b
+        mov.l   r5, @(r0, r3)
+2:
+        mov.l   .Lmain, r0
+        jsr     @r0
+        nop
+
+        /* main has returned */
+.Lstop:
+        bra     .Lstop
+        nop
+
+/* Zeroes the longs from r1 up to r2, from the top down: the ones over a count of 8, then 8
+ * a pass. The SH-2 stores with a step down, and with none up */
+.Lclear:
+        mov     r2, r3
+        sub     r1, r3
+        shlr2   r3
+        mov     #7, r1
+        and     r3, r1
+        shlr2   r3
+        shlr    r3
+        tst     r1, r1
+        bt/s    2f
+        mov     #0, r0
+1:
+        dt      r1
+        bf/s    1b
+        mov.l   r0, @-r2
+2:
+        tst     r3, r3
+        bt      4f
+3:
+        .rept   7
+        mov.l   r0, @-r2
+        .endr
+        dt      r3
+        bf/s    3b
+        mov.l   r0, @-r2
+4:
+        rts
+        nop
+
+        .align 2
+.Lstack_end:
+        .long   hx_stack_end
+.Lccr:
+        .long   SH2_CCR
+.Lbss:
+        .long   hx_bss
+.Lbss_end:
+        .long   hx_bss_end
+.Llow_ram_bss:
+        .long   hx_low_ram_bss
+.Llow_ram_bss_end:
+        .long   hx_low_ram_bss_end
+.Llow_ram_data:
+        .long   hx_low_ram_data
+.Llow_ram_data_end:
+        .long   hx_low_ram_data_end
+.Llow_ram_data_load:
+        .long   hx_low_ram_data_load
+.Lmain:
+        .long   _main

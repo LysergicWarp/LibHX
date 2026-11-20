@@ -182,8 +182,9 @@ $(HX_IP_DIR)/security.bin $(HX_IP_DIR)/areas_all.bin &: hx-disc-always | $(HX_IP
 	        || mv $(HX_IP_DIR)/$$name.new $(HX_IP_DIR)/$$name.bin; \
 	done
 
-# A change to a makefile builds the Initial Program anew, as a changed setting does
-HX_DISC_MAKEFILES:= $(MAKEFILE_LIST)
+# A change to a makefile builds the Initial Program anew, as a changed setting does. A
+# compiler's dependency file is no makefile for this.
+HX_DISC_MAKEFILES:= $(filter-out %.d,$(MAKEFILE_LIST))
 
 # The blocks of the disc's areas, in the BIOS's order
 $(HX_IP_DIR)/areas.bin: $(HX_IP_DIR)/areas_all.bin $(HX_IP_DIR)/settings $(HX_DISC_MAKEFILES)
