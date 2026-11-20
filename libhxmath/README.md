@@ -16,8 +16,12 @@ Fixed-point math for the SH-2, in C and assembly. Its public headers depend on `
 
 `make HX_OUT=<folder>` builds `libhxmath.a` and `libhxmath_ref.a` into that folder, with
 `HX_CC` and `HX_AR` as the SH-2 compiler and archiver. Nothing is written beside the sources.
-A program that links the references puts `libhxmath_ref.a` ahead of `libhxmath.a`.
+A program that links the references puts `libhxmath_ref.a` ahead of `libhxmath.a`. The flags are
+the SDK's, from [`build/flags.mk`](../build/flags.mk).
+
+`make headers` checks each public header alone, as C11, C23 and C++23, with `HX_CXX` as the C++
+compiler. It builds nothing.
 
 The same sources and toolchain give the same archives, byte for byte, wherever the clone and
-`HX_OUT` are. Debug data from the compiler names the build folder as `libhxmath`, and source files
-relative to it.
+`HX_OUT` are. `HX_OUT` holds no space. Debug data from the compiler names the build folder as
+`LibHX/libhxmath`, and source files relative to it.

@@ -1,16 +1,13 @@
 # Builds libhxmath.a and libhxmath_ref.a into HX_OUT, a folder of the program that builds them.
 # libhxmath_ref.a holds the assembly functions in C, for tests alone. Link it ahead of libhxmath.a.
-# HX_CC and HX_AR are the SH-2 compiler and archiver.
+# make headers checks each public header alone, and takes no HX_OUT.
+include ../build/flags.mk
+
+ifneq ($(MAKECMDGOALS),headers)
 ifeq ($(strip $(HX_OUT)),)
   $(error Undefined HX_OUT (the folder the archives are built into))
 endif
-
-HX_CC?= sh2eb-elf-gcc
-HX_AR?= sh2eb-elf-ar
-
-# The rules below are all there are
-MAKEFLAGS+= --no-builtin-rules
-.SUFFIXES:
+endif
 
 SRCS:= \
 	atan2.c \
@@ -43,53 +40,36 @@ REF_SRCS:= \
 	ref_vec3.c \
 	ref_view.c
 
-OBJS:= $(patsubst %,$(HX_OUT)/%.o,$(basename $(SRCS)))
-REF_OBJS:= $(patsubst %,$(HX_OUT)/%.o,$(basename $(REF_SRCS)))
-
-# The same source gives the same archives wherever it is built. Debug data from the compiler names
-# the folder of the build as libhxmath, and a source file relative to it. The compiler takes that
-# folder from PWD, which a build entered through a link has as the link.
-PATHMAP:= -ffile-prefix-map='$(CURDIR)'=libhxmath
-export PWD:= $(CURDIR)
-
-CFLAGS:= \
-	-std=c11 \
-	-m2 \
-	-mb \
-	-O2 \
-	-ffreestanding \
-	-fomit-frame-pointer \
-	-ffunction-sections \
-	-fdata-sections \
-	-Wall \
-	-Wextra \
-	-Wshadow \
-	$(PATHMAP) \
-	-Iinclude
+# The objects sit in a folder of the library's own, beside the archives
+OBJ:= $(HX_OUT)/$(HX_LIBRARY)
+OBJS:= $(patsubst %,$(OBJ)/%.o,$(basename $(SRCS)))
+REF_OBJS:= $(patsubst %,$(OBJ)/%.o,$(basename $(REF_SRCS)))
 
 .PHONY: all
 
 all: $(HX_OUT)/libhxmath.a $(HX_OUT)/libhxmath_ref.a
 
-# D: no time, owner or mode of a member in the archive
 $(HX_OUT)/libhxmath.a: $(OBJS)
 	rm -f $@
-	$(HX_AR) rcsD $@ $^
+	$(HX_AR) $(HX_ARFLAGS) $@ $^
 
 $(HX_OUT)/libhxmath_ref.a: $(REF_OBJS)
 	rm -f $@
-	$(HX_AR) rcsD $@ $^
+	$(HX_AR) $(HX_ARFLAGS) $@ $^
 
-$(HX_OUT)/%.o: src/%.c | $(HX_OUT)
-	$(HX_CC) $(CFLAGS) -MMD -MP -c -o $@ $<
+# A change to this file or to the SDK's flags builds every object anew
+$(OBJS) $(REF_OBJS): Makefile ../build/flags.mk
 
-$(HX_OUT)/%.o: src/%.sx | $(HX_OUT)
-	$(HX_CC) -m2 -mb $(PATHMAP) -MMD -MP -c -o $@ $<
+$(OBJ)/%.o: src/%.c | $(OBJ)
+	$(HX_CC) $(HX_CFLAGS) -Iinclude -MMD -MP -c -o $@ $<
 
-$(HX_OUT)/%.o: ref/%.c | $(HX_OUT)
-	$(HX_CC) $(CFLAGS) -Iref/include -Isrc -MMD -MP -c -o $@ $<
+$(OBJ)/%.o: src/%.sx | $(OBJ)
+	$(HX_CC) $(HX_ASFLAGS) -MMD -MP -c -o $@ $<
 
-$(HX_OUT):
+$(OBJ)/%.o: ref/%.c | $(OBJ)
+	$(HX_CC) $(HX_CFLAGS) -Iinclude -Iref/include -Isrc -MMD -MP -c -o $@ $<
+
+$(OBJ):
 	mkdir -p $@
 
 # A source that is gone and that a dependency file in HX_OUT still names: its object is made anew
@@ -99,3 +79,7 @@ src/%.sx: ;
 ref/%.c: ;
 
 -include $(OBJS:.o=.d) $(REF_OBJS:.o=.d)
+
+HX_HEADERS:= $(shell find include -name '*.h' | LC_ALL=C sort)
+HX_HEADER_FLAGS:= -Iinclude
+include ../build/headers.mk

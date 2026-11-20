@@ -9,10 +9,10 @@
  * Nothing here makes code */
 
 #define FIELD(type, field, offset) \
-        _Static_assert(offsetof(type, field) == (offset), #type "." #field " is not at " #offset)
+        static_assert(offsetof(type, field) == (offset), #type "." #field " is not at " #offset)
 
 #define SIZE(what, size) \
-        _Static_assert(sizeof(what) == (size), #what " is not " #size " bytes")
+        static_assert(sizeof(what) == (size), #what " is not " #size " bytes")
 
 /* The widths the assembly's word and long instructions take */
 SIZE(hx_fix16_t, 4);
