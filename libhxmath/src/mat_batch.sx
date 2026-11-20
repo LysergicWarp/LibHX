@@ -9,6 +9,8 @@
  * by mac.w. The translation is kept in registers, and r4 walks the rotation and is taken back
  * once a point. */
 
+#include <hx/hw/sh2/divu.h>
+
 #include "layout.h"
 
         /* A row of the matrix at r4 by the point at r5, the translation given */
@@ -104,8 +106,8 @@ _hx_mat_project_batch:
         add     #-HX_VTX_SIZE, r5
         sts     macl, r1
         mov.l   r1, @r3
-        mov.l   r12, @(16, r3)
-        mov.l   r13, @(20, r3)
+        mov.l   r12, @(SH2_DVDNTH - SH2_DVSR, r3)
+        mov.l   r13, @(SH2_DVDNTL - SH2_DVSR, r3)
         dt      r6
         bt.s    2f
         mov.l   r1, @r7
@@ -124,10 +126,10 @@ _hx_mat_project_batch:
         add     #-HX_MAT_ROTATION_SIZE, r4
         add     #-HX_VTX_SIZE, r5
         sts     macl, r1
-        mov.l   @(20, r3), r0
+        mov.l   @(SH2_DVDNTL - SH2_DVSR, r3), r0
         mov.l   r1, @r3
-        mov.l   r12, @(16, r3)
-        mov.l   r13, @(20, r3)
+        mov.l   r12, @(SH2_DVDNTH - SH2_DVSR, r3)
+        mov.l   r13, @(SH2_DVDNTL - SH2_DVSR, r3)
 
         dmuls.l r11, r0
         mov.l   r1, @(HX_PROJECTED_SIZE, r7)
@@ -147,7 +149,7 @@ _hx_mat_project_batch:
         mov.l   @r15+, r13
         mov.l   @r15+, r12
         sts     macl, r11
-        mov.l   @(20, r3), r0
+        mov.l   @(SH2_DVDNTL - SH2_DVSR, r3), r0
         dmuls.l r11, r0
         mov.l   @r15+, r11
         sts.l   mach, @-r7
@@ -164,4 +166,4 @@ _hx_mat_project_batch:
 
         .align 2
 .Ldivider:
-        .long   0xFFFFFF00
+        .long   SH2_DVSR

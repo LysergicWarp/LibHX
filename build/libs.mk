@@ -23,7 +23,8 @@ endif
 # In link order: a library ahead of the ones it uses
 HX_LIBRARIES:= hxmath
 
-HX_CPPFLAGS:= $(foreach library,$(HX_LIBRARIES),-I$(HX_ROOT)/lib$(library)/include)
+HX_CPPFLAGS:= -I$(HX_ROOT)/hw/include \
+    $(foreach library,$(HX_LIBRARIES),-I$(HX_ROOT)/lib$(library)/include)
 HX_ARCHIVES:= $(foreach library,$(HX_LIBRARIES),$(HX_OUT)/lib$(library).a)
 HX_LDLIBS:= -L$(HX_OUT) $(addprefix -l,$(HX_LIBRARIES))
 

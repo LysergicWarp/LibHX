@@ -10,13 +10,13 @@
 static inline uint32_t
 hx_priv_divide(uint32_t high, uint32_t low, uint32_t divisor)
 {
-        volatile struct hx_priv_divider * const divider = HX_PRIV_DIVIDER;
+        volatile struct sh2_divu * const divu = SH2_DIVU;
 
-        divider->dvsr = (int32_t)divisor;
-        divider->dvdnth = (int32_t)high;
-        divider->dvdntl = (int32_t)low;
+        divu->dvsr = (int32_t)divisor;
+        divu->dvdnth = (int32_t)high;
+        divu->dvdntl = (int32_t)low;
 
-        return (uint32_t)divider->dvdntl;
+        return (uint32_t)divu->dvdntl;
 }
 
 #endif /* !HX_SRC_DIVIDE_H */

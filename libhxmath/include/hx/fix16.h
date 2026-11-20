@@ -2,22 +2,11 @@
 #define HX_FIX16_H
 
 #include <hx/types.h>
+#include <hx/hw/sh2/divu.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/* The SH-2's divide unit */
-struct hx_priv_divider {
-        int32_t dvsr;
-        int32_t dvdnt;
-        int32_t dvcr;
-        int32_t vcrdiv;
-        int32_t dvdnth;
-        int32_t dvdntl;
-};
-
-#define HX_PRIV_DIVIDER ((volatile struct hx_priv_divider *)0xFFFFFF00UL)
 
 /* The most negative value comes back as it is */
 static inline hx_fix16_t
@@ -103,18 +92,18 @@ hx_lerp(hx_fix16_t a, hx_fix16_t b, hx_fix16_t t)
 static inline void
 hx_div_start(hx_fix16_t a, hx_fix16_t b)
 {
-        volatile struct hx_priv_divider * const divider = HX_PRIV_DIVIDER;
+        volatile struct sh2_divu * const divu = SH2_DIVU;
 
-        divider->dvsr = b;
-        divider->dvdnth = a >> 16;
-        divider->dvdntl = (int32_t)((uint32_t)a << 16);
+        divu->dvsr = b;
+        divu->dvdnth = a >> 16;
+        divu->dvdntl = (int32_t)((uint32_t)a << 16);
 }
 
 /* The quotient of the divide started, waiting for it if need be */
 static inline hx_fix16_t
 hx_div_collect(void)
 {
-        return HX_PRIV_DIVIDER->dvdntl;
+        return SH2_DIVU->dvdntl;
 }
 
 static inline hx_fix16_t

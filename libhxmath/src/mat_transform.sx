@@ -7,6 +7,8 @@
  * A 2.14 row by a 14.2 point is 16.16 as it stands, so a row's translation goes into MACL ahead
  * of its three products by mac.w and the sum is read from there. MACH is never read. */
 
+#include <hx/hw/sh2/divu.h>
+
 #include "layout.h"
 
         .section .text.hx_mat_transform, "ax", @progbits
@@ -61,9 +63,9 @@ _hx_mat_project:
         mov     r6, r2
         shlr16  r2
         exts.w  r2, r2
-        mov.l   r2, @(16, r3)
+        mov.l   r2, @(SH2_DVDNTH - SH2_DVSR, r3)
         shll16  r6
-        mov.l   r6, @(20, r3)
+        mov.l   r6, @(SH2_DVDNTL - SH2_DVSR, r3)
 
         mov     r4, r1
         add     #HX_MAT_TRANSLATION, r1
@@ -79,7 +81,7 @@ _hx_mat_project:
         mac.w   @r4+, @r5+
         sts     macl, r5
 
-        mov.l   @(20, r3), r6
+        mov.l   @(SH2_DVDNTL - SH2_DVSR, r3), r6
         dmuls.l r2, r6
         sts     mach, r2
         mov.w   r2, @r7
@@ -91,4 +93,4 @@ _hx_mat_project:
 
         .align 2
 .Ldivider:
-        .long   0xFFFFFF00
+        .long   SH2_DVSR

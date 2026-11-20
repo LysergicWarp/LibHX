@@ -1,6 +1,7 @@
 # libhxmath
 
-Fixed-point math for the SH-2, in C and assembly. Its public headers depend on `stdint.h` alone.
+Fixed-point math for the SH-2, in C and assembly. Its public headers depend on `stdint.h`,
+`stddef.h` and the divide unit's register map, `<hx/hw/sh2/divu.h>` from [`hw/`](../hw).
 
 ## Layout
 

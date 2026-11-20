@@ -40,6 +40,9 @@ REF_SRCS:= \
 	ref_vec3.c \
 	ref_view.c
 
+# The library's headers and the register maps
+INCLUDES:= -Iinclude -I../hw/include
+
 # The objects sit in a folder of the library's own, beside the archives
 OBJ:= $(HX_OUT)/$(HX_LIBRARY)
 OBJS:= $(patsubst %,$(OBJ)/%.o,$(basename $(SRCS)))
@@ -61,13 +64,13 @@ $(HX_OUT)/libhxmath_ref.a: $(REF_OBJS)
 $(OBJS) $(REF_OBJS): Makefile ../build/flags.mk
 
 $(OBJ)/%.o: src/%.c | $(OBJ)
-	$(HX_CC) $(HX_CFLAGS) -Iinclude -MMD -MP -c -o $@ $<
+	$(HX_CC) $(HX_CFLAGS) $(INCLUDES) -MMD -MP -c -o $@ $<
 
 $(OBJ)/%.o: src/%.sx | $(OBJ)
-	$(HX_CC) $(HX_ASFLAGS) -MMD -MP -c -o $@ $<
+	$(HX_CC) $(HX_ASFLAGS) $(INCLUDES) -MMD -MP -c -o $@ $<
 
 $(OBJ)/%.o: ref/%.c | $(OBJ)
-	$(HX_CC) $(HX_CFLAGS) -Iinclude -Iref/include -Isrc -MMD -MP -c -o $@ $<
+	$(HX_CC) $(HX_CFLAGS) $(INCLUDES) -Iref/include -Isrc -MMD -MP -c -o $@ $<
 
 $(OBJ):
 	mkdir -p $@
@@ -81,5 +84,5 @@ ref/%.c: ;
 -include $(OBJS:.o=.d) $(REF_OBJS:.o=.d)
 
 HX_HEADERS:= $(shell find include -name '*.h' | LC_ALL=C sort)
-HX_HEADER_FLAGS:= -Iinclude
+HX_HEADER_FLAGS:= $(INCLUDES)
 include ../build/headers.mk
