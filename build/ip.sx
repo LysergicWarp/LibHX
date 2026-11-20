@@ -1,0 +1,91 @@
+/* The disc's Initial Program: the System ID, the Security Code, the Area Code Group and the code
+ * that hands over to the 1st Read file. The BIOS loads it at 0x06002000, checks the Security
+ * Code and the area against its own, and runs it from the Security Code on.
+ *
+ * disc.mk gives each field of the System ID as an HX_IP_ macro, and cuts security.bin and
+ * areas.bin from the BIOS. A text too long for its field stops the build. */
+
+#if !defined(HX_IP_MAKER) || !defined(HX_IP_PRODUCT) || !defined(HX_IP_VERSION) \
+    || !defined(HX_IP_DATE) || !defined(HX_IP_DEVICE) || !defined(HX_IP_AREAS) \
+    || !defined(HX_IP_PERIPHERALS) || !defined(HX_IP_TITLE) || !defined(HX_IP_STACK_M) \
+    || !defined(HX_IP_STACK_S) || !defined(HX_IP_FIRST_READ)
+#error "ip.sx is built by disc.mk, which defines the System ID's fields"
+#endif
+
+/* Where the BIOS loads the Initial Program, and its size in the header: 0x1000 at least, 0x8000
+ * at most */
+#define IP_BASE 0x06002000
+#define IP_SIZE 0x1000
+
+/* A text field at its place in the System ID, padded with spaces to its size */
+        .macro  padded name, at, size, value
+        .org    \at
+0:
+        .ascii  "\value"
+        .if     . - 0b > \size
+        .error  "\name is longer than \size characters"
+        .endif
+        .org    \at + \size, 0x20
+        .endm
+
+/* A text field of one length */
+        .macro  exact name, at, size, value
+        .org    \at
+0:
+        .ascii  "\value"
+        .if     . - 0b - \size
+        .error  "\name is not \size characters"
+        .endif
+        .endm
+
+        .text
+
+        .ascii  "SEGA SEGASATURN "
+        padded  "HX_IP_MAKER", 0x10, 16, HX_IP_MAKER
+        padded  "HX_IP_PRODUCT", 0x20, 10, HX_IP_PRODUCT
+        exact   "HX_IP_VERSION", 0x2A, 6, HX_IP_VERSION
+        exact   "HX_IP_DATE", 0x30, 8, HX_IP_DATE
+        padded  "HX_IP_DEVICE", 0x38, 8, HX_IP_DEVICE
+        padded  "HX_IP_AREAS", 0x40, 10, HX_IP_AREAS
+        .org    0x50, 0x20
+        padded  "HX_IP_PERIPHERALS", 0x50, 16, HX_IP_PERIPHERALS
+        padded  "HX_IP_TITLE", 0x60, 112, HX_IP_TITLE
+
+        .org    0xE0, 0
+        .long   IP_SIZE
+        .long   0
+        .long   HX_IP_STACK_M
+        .long   HX_IP_STACK_S
+        .long   HX_IP_FIRST_READ
+        .long   0                       /* 1st Read Size, not used for a disc */
+        .long   0, 0
+
+/* The 1st Read file is loaded past the Initial Program and below the end of Work RAM-H */
+        .if     (HX_IP_FIRST_READ <= IP_BASE + IP_SIZE) || (HX_IP_FIRST_READ >= 0x06100000 - 4)
+        .error  "HX_IP_FIRST_READ is not between the Initial Program and the end of Work RAM-H"
+        .endif
+        .if     HX_IP_FIRST_READ & 3
+        .error  "HX_IP_FIRST_READ is not a multiple of 4"
+        .endif
+        .if     (HX_IP_STACK_M & 3) || (HX_IP_STACK_S & 3)
+        .error  "HX_IP_STACK_M or HX_IP_STACK_S is not a multiple of 4"
+        .endif
+
+        .org    0x100
+        .incbin "security.bin"
+
+/* One block of 32 bytes for each area: a branch over a text, to the next block */
+        .org    0xE00
+        .incbin "areas.bin"
+
+/* The Security Code has loaded the 1st Read file and set the stack from the header. It leaves
+ * r0 to r14, GBR, PR, MAC and SR zero. r0 holds the 1st Read address from here on. */
+        mov.l   first_read, r0
+        jmp     @r0
+        nop
+
+        .align 2
+first_read:
+        .long   HX_IP_FIRST_READ
+
+        .org    IP_SIZE, 0

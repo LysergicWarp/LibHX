@@ -32,6 +32,16 @@ The libraries build with the flags in [`build/flags.mk`](build/flags.mk): C23 at
 default calling convention, warnings as errors. `make headers` in a library's folder checks each
 of its public headers alone, as C11, C23 and C++23.
 
+[`build/disc.mk`](build/disc.mk) builds a disc image around a program: the Initial Program, an
+ISO with the program as its first file, a silent audio track and a CUE. A Saturn disc has one
+data track and one audio track at least, each of four seconds or more. The program's Makefile
+sets the image's path, the title, the release date and the program's file, and may set the
+other fields of the System ID. The same files give the same image, byte for byte.
+
+Every disc carries Sega's Security Code and an Area Code block for each area it runs in. The
+build cuts both from your own BIOS, named by `HX_BIOS`. The SDK holds no copy. The places are
+those of BIOS v1.01a, and a file with other bytes there stops the build.
+
 [`tools/image`](tools/image/Dockerfile) holds the toolchain image: binutils and GCC for the SH-2,
 GNU make and xorriso. [`tools/hx-make.ps1`](tools/hx-make.ps1) runs make in it.
 
