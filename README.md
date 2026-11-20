@@ -16,6 +16,19 @@ side: neither depends on the other.
 
 Hot paths are SH-2 assembly behind a C API.
 
+## Build
+
+A program builds the SDK's libraries from the clone into its own build folder. Its Makefile sets
+`HX_ROOT` to the clone and `HX_OUT` to a folder of its build, and includes
+[`build/libs.mk`](build/libs.mk). That gives it the include paths and the archives to link.
+
+The libraries build with the flags in [`build/flags.mk`](build/flags.mk): C23 at `-O2`, GCC's
+default calling convention, warnings as errors. `make headers` in a library's folder checks each
+of its public headers alone, as C11, C23 and C++23.
+
+[`tools/image`](tools/image/Dockerfile) holds the toolchain image: binutils and GCC for the SH-2,
+GNU make and xorriso. [`tools/hx-make.ps1`](tools/hx-make.ps1) runs make in it.
+
 ## Licence
 
 MIT ([LICENSE](LICENSE)).
