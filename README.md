@@ -16,6 +16,12 @@ side: neither depends on the other.
 
 Hot paths are SH-2 assembly behind a C API.
 
+[`hw/`](hw) holds the register maps the libraries share, as headers with no archive:
+`<hx/hw/sh2/...>` for the SH-2's own modules and `<hx/hw/315/...>` for Sega's chips. A map gives
+each register's address as a number, for C and assembly alike, a struct over the module for C,
+and the names of the bits. So far: the SH-2's cache, free-running timer and divide unit, the
+SCU, and VDP2's registers without their bits.
+
 ## Build
 
 A program builds the SDK's libraries from the clone into its own build folder. Its Makefile sets
