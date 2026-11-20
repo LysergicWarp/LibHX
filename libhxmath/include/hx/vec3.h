@@ -4,6 +4,10 @@
 #include <hx/types.h>
 #include <hx/fix16.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* a plus b. Each coordinate wraps. The result may be a or b */
 static inline void
 hx_vec3_add(const hx_vec3_t *a, const hx_vec3_t *b, hx_vec3_t *result)
@@ -144,5 +148,9 @@ void hx_vec3_cross(const hx_vec3_t *a, const hx_vec3_t *b, hx_vec3_t *result);
  * short of one. The other rounds to the nearest, and such a vector comes out as one exactly */
 void hx_vec3_normalize(const hx_vec3_t *v, hx_vec3_t *result);
 void hx_vec3_normalize_round(const hx_vec3_t *v, hx_vec3_t *result);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* !HX_VEC3_H */

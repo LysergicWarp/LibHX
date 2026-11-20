@@ -3,6 +3,10 @@
 
 #include <hx/types.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Sine and cosine, 4096 steps a turn */
 extern const hx_fix14_t hx_priv_sincos[4096][2];
 
@@ -77,5 +81,9 @@ hx_angle_t hx_atan2(hx_fix16_t y, hx_fix16_t x);
 /* The same by the nearest of 1024 steps of the smaller coordinate over the larger, up to 6 units
  * off */
 hx_angle_t hx_atan2_fast(hx_fix16_t y, hx_fix16_t x);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* !HX_TRIG_H */

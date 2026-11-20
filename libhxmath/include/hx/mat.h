@@ -5,6 +5,10 @@
 #include <hx/fix16.h>
 #include <hx/trig.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* A function with one matrix to read may write its result over it, whole. hx_mat_mul may not. */
 
 void hx_mat_identity(hx_mat_t *result);
@@ -164,5 +168,9 @@ hx_view_distance(int32_t width, hx_angle_t angle)
 
         return hx_div(half, hx_tan((hx_angle_t)((uint16_t)angle >> 1)));
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* !HX_MAT_H */

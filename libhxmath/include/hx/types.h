@@ -3,6 +3,10 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* The number in a name is its fraction bits */
 typedef int32_t hx_fix16_t; /* 16.16 */
 typedef int16_t hx_fix14_t; /* 2.14 */
@@ -117,5 +121,9 @@ hx_fix2_to_int(hx_fix2_t value)
 {
         return value >> 2;
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* !HX_TYPES_H */

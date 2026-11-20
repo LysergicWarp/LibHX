@@ -3,6 +3,10 @@
 
 #include <hx/types.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* The assembly functions in C: the same results, to check them against and to read */
 
 hx_fix16_t hx_ref_sqrt(hx_fix16_t value);
@@ -31,5 +35,9 @@ void hx_ref_mat_transform_batch(const hx_mat_t *m, const hx_vtx_t *source, uint3
     hx_vec3_t *result);
 void hx_ref_mat_project_batch(const hx_mat_t *m, const hx_vtx_t *source, uint32_t count,
     hx_fix16_t distance, hx_projected_t *result);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* !HX_REF_H */

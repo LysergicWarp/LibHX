@@ -3,6 +3,10 @@
 
 #include <hx/types.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* The SH-2's divide unit */
 struct hx_priv_divider {
         int32_t dvsr;
@@ -174,5 +178,9 @@ hx_sqrt_fast(hx_fix16_t value)
  * of 4 comes out 1/65536 short. 0 for a value of 0 or below. The largest result is 256 less
  * 1/65536, for 1/65536 */
 hx_fix16_t hx_rsqrt(hx_fix16_t value);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* !HX_FIX16_H */

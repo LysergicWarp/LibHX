@@ -4,6 +4,10 @@
 #include <hx/types.h>
 #include <hx/fix16.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* The 3D set again in the plane, each function as its 3D one. There is no fast length in 2D */
 
 /* a plus b. Each coordinate wraps. The result may be a or b */
@@ -116,5 +120,9 @@ hx_fix16_t hx_vec2_distance(const hx_vec2_t *a, const hx_vec2_t *b);
  * short of one. The other rounds to the nearest, and such a vector comes out as one exactly */
 void hx_vec2_normalize(const hx_vec2_t *v, hx_vec2_t *result);
 void hx_vec2_normalize_round(const hx_vec2_t *v, hx_vec2_t *result);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* !HX_VEC2_H */
