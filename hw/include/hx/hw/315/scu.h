@@ -3,7 +3,8 @@
 
 #include <hx/hw/map.h>
 
-/* The SCU: DMA on three levels, its DSP, two timers, the interrupt mask and status, the A-Bus.
+/** @file
+ * The SCU: DMA on three levels, its DSP, two timers, the interrupt mask and status, the A-Bus.
  *
  * Every register is 32 bits. The addresses are the ones past the SH-2's cache: through the cache
  * a read fills a line of four registers, some of which are not to be read.

@@ -3,7 +3,8 @@
 
 #include <hx/hw/map.h>
 
-/* VDP2's registers: 142 of 16 bits each, and two reserved words among them. The addresses are
+/** @file
+ * VDP2's registers: 142 of 16 bits each, and two reserved words among them. The addresses are
  * the ones past the SH-2's cache.
  *
  * TVMD, EXTEN, VRSIZE and RAMCTL are written and can be read back, VRSIZE's version number read

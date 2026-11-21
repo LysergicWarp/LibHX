@@ -1,7 +1,8 @@
 #ifndef HX_START_H
 #define HX_START_H
 
-/* Startup, and where a program's data goes.
+/** @file
+ * Startup, and where a program's data goes.
  *
  * The BIOS loads the program to Work RAM-H and enters it at startup. Startup sets the stack,
  * turns the cache on, clears the zeroed data, copies the initial values that belong outside
@@ -25,14 +26,15 @@
  * disc's header names none. The program's build picks the place and the size (HX_STACK and
  * HX_STACK_SIZE, build/program.mk). */
 
-/* An object placed in Work RAM-L instead of Work RAM-H:
+/** An object placed in Work RAM-L instead of Work RAM-H:
  *
- *     HX_LOW_RAM static uint8_t buffer[0x40000];
- *     HX_LOW_RAM_DATA static uint16_t steps[] = { 1, 2, 4 };
+ *      HX_LOW_RAM static uint8_t buffer[0x40000];
+ *      HX_LOW_RAM_DATA static uint16_t steps[] = { 1, 2, 4 };
  *
  * HX_LOW_RAM is for one without an initial value: zeroed, and not in the file the BIOS loads.
  * HX_LOW_RAM_DATA is for one with: its value is in the file, and startup copies it over. */
 #define HX_LOW_RAM HX_PRIV_SECTION(".bss.hx_low_ram", __LINE__)
+/** @copydoc HX_LOW_RAM */
 #define HX_LOW_RAM_DATA HX_PRIV_SECTION(".data.hx_low_ram", __LINE__)
 
 /* A section for each line that places an object, so a link drops the ones nothing uses */
@@ -43,8 +45,9 @@
 extern "C" {
 #endif
 
-/* The stack: its lowest byte, and the byte past its highest */
+/** The stack: its lowest byte, and the byte past its highest */
 extern char hx_stack_start[];
+/** @copydoc hx_stack_start */
 extern char hx_stack_end[];
 
 #ifdef __cplusplus

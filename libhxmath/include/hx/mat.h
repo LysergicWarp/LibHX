@@ -5,22 +5,25 @@
 #include <hx/fix16.h>
 #include <hx/trig.h>
 
+/** @file
+ * Matrices. A function with one matrix to read may write its result over it, whole. hx_mat_mul
+ * may not. */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/* A function with one matrix to read may write its result over it, whole. hx_mat_mul may not. */
-
 void hx_mat_identity(hx_mat_t *result);
 
-/* a by b: b is applied to the point first. The result is neither a nor b */
+/** a by b: b is applied to the point first. The result is neither a nor b */
 void hx_mat_mul(const hx_mat_t *a, const hx_mat_t *b, hx_mat_t *result);
+/** @copydoc hx_mat_mul */
 void hx_mat_mul_round(const hx_mat_t *a, const hx_mat_t *b, hx_mat_t *result);
 
-/* The rotation transposed, no translation */
+/** The rotation transposed, no translation */
 void hx_mat_transpose(const hx_mat_t *m, hx_mat_t *result);
 
-/* The inverse of a rotation with a translation. Not for a matrix that scales */
+/** The inverse of a rotation with a translation. Not for a matrix that scales */
 void hx_mat_invert_rigid(const hx_mat_t *m, hx_mat_t *result);
 
 /* m by a turn about an axis, the turn given as its sine and then its cosine */
@@ -28,7 +31,7 @@ void hx_priv_mat_rotate_x(const hx_mat_t *m, const hx_fix14_t *turn, hx_mat_t *r
 void hx_priv_mat_rotate_y(const hx_mat_t *m, const hx_fix14_t *turn, hx_mat_t *result);
 void hx_priv_mat_rotate_z(const hx_mat_t *m, const hx_fix14_t *turn, hx_mat_t *result);
 
-/* m by a turn about an axis: the turn is applied to the point first. The turn is by hx_sin and
+/** m by a turn about an axis: the turn is applied to the point first. The turn is by hx_sin and
  * hx_cos of the angle */
 static inline void
 hx_mat_rotate_x(const hx_mat_t *m, hx_angle_t angle, hx_mat_t *result)
@@ -38,6 +41,7 @@ hx_mat_rotate_x(const hx_mat_t *m, hx_angle_t angle, hx_mat_t *result)
         hx_priv_mat_rotate_x(m, turn, result);
 }
 
+/** @copydoc hx_mat_rotate_x */
 static inline void
 hx_mat_rotate_y(const hx_mat_t *m, hx_angle_t angle, hx_mat_t *result)
 {
@@ -46,6 +50,7 @@ hx_mat_rotate_y(const hx_mat_t *m, hx_angle_t angle, hx_mat_t *result)
         hx_priv_mat_rotate_y(m, turn, result);
 }
 
+/** @copydoc hx_mat_rotate_x */
 static inline void
 hx_mat_rotate_z(const hx_mat_t *m, hx_angle_t angle, hx_mat_t *result)
 {
@@ -54,33 +59,39 @@ hx_mat_rotate_z(const hx_mat_t *m, hx_angle_t angle, hx_mat_t *result)
         hx_priv_mat_rotate_z(m, turn, result);
 }
 
-/* The same by hx_sin_fast and hx_cos_fast: the turn is that of the angle's top 12 bits */
+/** The same by hx_sin_fast and hx_cos_fast: the turn is that of the angle's top 12 bits */
 static inline void
 hx_mat_rotate_x_fast(const hx_mat_t *m, hx_angle_t angle, hx_mat_t *result)
 {
         hx_priv_mat_rotate_x(m, hx_priv_sincos[(uint16_t)angle >> 4], result);
 }
 
+/** @copydoc hx_mat_rotate_x_fast */
 static inline void
 hx_mat_rotate_y_fast(const hx_mat_t *m, hx_angle_t angle, hx_mat_t *result)
 {
         hx_priv_mat_rotate_y(m, hx_priv_sincos[(uint16_t)angle >> 4], result);
 }
 
+/** @copydoc hx_mat_rotate_x_fast */
 static inline void
 hx_mat_rotate_z_fast(const hx_mat_t *m, hx_angle_t angle, hx_mat_t *result)
 {
         hx_priv_mat_rotate_z(m, hx_priv_sincos[(uint16_t)angle >> 4], result);
 }
 
-/* A turn about an axis, no translation, by hx_sin and hx_cos of the angle */
+/** A turn about an axis, no translation, by hx_sin and hx_cos of the angle */
 void hx_mat_rotation_x(hx_angle_t angle, hx_mat_t *result);
+/** @copydoc hx_mat_rotation_x */
 void hx_mat_rotation_y(hx_angle_t angle, hx_mat_t *result);
+/** @copydoc hx_mat_rotation_x */
 void hx_mat_rotation_z(hx_angle_t angle, hx_mat_t *result);
 
-/* The same by hx_sin_fast and hx_cos_fast */
+/** The same by hx_sin_fast and hx_cos_fast */
 void hx_mat_rotation_x_fast(hx_angle_t angle, hx_mat_t *result);
+/** @copydoc hx_mat_rotation_x_fast */
 void hx_mat_rotation_y_fast(hx_angle_t angle, hx_mat_t *result);
+/** @copydoc hx_mat_rotation_x_fast */
 void hx_mat_rotation_z_fast(hx_angle_t angle, hx_mat_t *result);
 
 /* The view below, the roll given as the sine and then the cosine of the roll negated, or as 0
@@ -88,7 +99,7 @@ void hx_mat_rotation_z_fast(hx_angle_t angle, hx_mat_t *result);
 void hx_priv_mat_lookat(const hx_vec3_t *eye, const hx_vec3_t *target, const hx_fix14_t *roll,
     hx_mat_t *result);
 
-/* The view of a camera at eye that looks at target: target comes out on +z, eye at (0, 0, 0).
+/** The view of a camera at eye that looks at target: target comes out on +z, eye at (0, 0, 0).
  * The camera stays level, its x along the ground, then turns about its line of sight by roll,
  * its x toward its y. The picture turns the other way: the view is hx_mat_rotation_z of the roll
  * negated, applied behind the level view.
@@ -110,7 +121,7 @@ hx_mat_lookat(const hx_vec3_t *eye, const hx_vec3_t *target, hx_angle_t roll, hx
         }
 }
 
-/* The same with the roll by hx_sin_fast and hx_cos_fast, as hx_mat_rotation_z_fast turns */
+/** The same with the roll by hx_sin_fast and hx_cos_fast, as hx_mat_rotation_z_fast turns */
 static inline void
 hx_mat_lookat_fast(const hx_vec3_t *eye, const hx_vec3_t *target, hx_angle_t roll,
     hx_mat_t *result)
@@ -119,14 +130,14 @@ hx_mat_lookat_fast(const hx_vec3_t *eye, const hx_vec3_t *target, hx_angle_t rol
             (roll == 0) ? 0 : hx_priv_sincos[(uint16_t)-roll >> 4], result);
 }
 
-/* v by m */
+/** v by m */
 void hx_mat_transform(const hx_mat_t *m, const hx_vtx_t *v, hx_vec3_t *result);
 
-/* v by m's rotation alone, no translation: a direction or a normal. Each coordinate is three
+/** v by m's rotation alone, no translation: a direction or a normal. Each coordinate is three
  * products summed whole, then rounded down once, and it wraps. The result may be v */
 void hx_mat_transform_vector(const hx_mat_t *m, const hx_vec3_t *v, hx_vec3_t *result);
 
-/* v by m and onto a screen at that distance: x and y in pixels from the screen's centre. Returns
+/** v by m and onto a screen at that distance: x and y in pixels from the screen's centre. Returns
  * z as hx_mat_transform gives it.
  *
  * A pixel is the coordinate by distance / z, the quotient cut off as 16.16, rounded down: within
@@ -137,13 +148,15 @@ void hx_mat_transform_vector(const hx_mat_t *m, const hx_vec3_t *v, hx_vec3_t *r
 hx_fix16_t hx_mat_project(const hx_mat_t *m, const hx_vtx_t *v, hx_fix16_t distance,
     hx_screen_t *result);
 
-/* The batch forms: count points of source, one after another, into as many of result. Each
+/** @name Batch forms
+ * The batch forms: count points of source, one after another, into as many of result. Each
  * comes out as its single form gives it. A count of 0 does nothing. */
+/** @{ */
 
 void hx_mat_transform_batch(const hx_mat_t *m, const hx_vtx_t *source, uint32_t count,
     hx_vec3_t *result);
 
-/* A point that hx_mat_project is not for has its z right and an x and y that mean nothing, and
+/** A point that hx_mat_project is not for has its z right and an x and y that mean nothing, and
  * the points around it come out as ever.
  *
  * One too near, z at or under distance / 32768, the caller drops by its z behind the call.
@@ -157,7 +170,9 @@ void hx_mat_transform_batch(const hx_mat_t *m, const hx_vtx_t *source, uint32_t 
 void hx_mat_project_batch(const hx_mat_t *m, const hx_vtx_t *source, uint32_t count,
     hx_fix16_t distance, hx_projected_t *result);
 
-/* The distance of a screen that many pixels wide that fills that angle of view, for
+/** @} */
+
+/** The distance of a screen that many pixels wide that fills that angle of view, for
  * hx_mat_project. The angle is under half a turn and wide enough for the distance to stay under
  * 32768: 114 or more for a screen 352 wide. A narrower one, 0 and 1 among them, gives what the
  * divide unit gives. The distance is as exact as hx_tan of half the angle. Uses the divide unit */

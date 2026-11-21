@@ -1,0 +1,11 @@
+[book]
+title = "LibHX"
+language = "en"
+
+# A chapter in SUMMARY.md with no file stops the build, rather than getting an empty page
+[build]
+create-missing = false
+
+[output.html]
+site-url = "/LibHX/"
+git-repository-url = "https://github.com/LysergicWarp/LibHX"

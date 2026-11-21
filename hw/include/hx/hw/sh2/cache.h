@@ -3,7 +3,8 @@
 
 #include <hx/hw/map.h>
 
-/* The SH-2's cache: 4 kbytes, four ways of 64 lines, 16 bytes a line, instructions and data
+/** @file
+ * The SH-2's cache: 4 kbytes, four ways of 64 lines, 16 bytes a line, instructions and data
  * together.
  *
  * A reset leaves the cache off and its lines as they were. It is purged ahead of being turned

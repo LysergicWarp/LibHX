@@ -1,7 +1,8 @@
 #ifndef HX_HW_MAP_H
 #define HX_HW_MAP_H
 
-/* A register map names each register's address as a number, which assembly takes too, and lays a
+/** @file
+ * A register map names each register's address as a number, which assembly takes too, and lays a
  * struct over the module for C. A register is reached at its field's width alone. Which way it
  * goes, read or written, is in its map's comments.
  *

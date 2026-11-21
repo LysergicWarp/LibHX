@@ -4,11 +4,14 @@
 #include <hx/types.h>
 #include <hx/hw/sh2/divu.h>
 
+/** @file
+ * 16.16 arithmetic: bounds, rounding, products, divides and roots. */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/* The most negative value comes back as it is */
+/** The most negative value comes back as it is */
 static inline hx_fix16_t
 hx_abs(hx_fix16_t value)
 {
@@ -27,35 +30,35 @@ hx_max(hx_fix16_t a, hx_fix16_t b)
         return (a > b) ? a : b;
 }
 
-/* low is at most high */
+/** low is at most high */
 static inline hx_fix16_t
 hx_clamp(hx_fix16_t value, hx_fix16_t low, hx_fix16_t high)
 {
         return (value < low) ? low : ((value > high) ? high : value);
 }
 
-/* The whole number at or below the value */
+/** The whole number at or below the value */
 static inline hx_fix16_t
 hx_floor(hx_fix16_t value)
 {
         return (hx_fix16_t)((uint32_t)value & 0xFFFF0000UL);
 }
 
-/* The whole number at or above the value. Wraps above 32767 */
+/** The whole number at or above the value. Wraps above 32767 */
 static inline hx_fix16_t
 hx_ceil(hx_fix16_t value)
 {
         return (hx_fix16_t)(((uint32_t)value + 0xFFFFUL) & 0xFFFF0000UL);
 }
 
-/* What the value is above its floor: 0 or more, and less than 1 */
+/** What the value is above its floor: 0 or more, and less than 1 */
 static inline hx_fix16_t
 hx_frac(hx_fix16_t value)
 {
         return (hx_fix16_t)((uint32_t)value & 0xFFFFUL);
 }
 
-/* Rounds down */
+/** Rounds down */
 static inline hx_fix16_t
 hx_mul(hx_fix16_t a, hx_fix16_t b)
 {
@@ -72,7 +75,7 @@ hx_mul_round(hx_fix16_t a, hx_fix16_t b)
         return (hx_fix16_t)(((uint32_t)(product >> 32) << 16) | ((uint32_t)product >> 16));
 }
 
-/* a at a t of 0, b at a t of 1, the straight line through the two elsewhere. The part added to
+/** a at a t of 0, b at a t of 1, the straight line through the two elsewhere. The part added to
  * a is rounded down. b less a has to fit in 32 bits, and so has the result: one that does not
  * wraps */
 static inline hx_fix16_t
@@ -83,12 +86,14 @@ hx_lerp(hx_fix16_t a, hx_fix16_t b, hx_fix16_t t)
         return (hx_fix16_t)((uint32_t)a + (uint32_t)hx_mul(apart, t));
 }
 
-/* The divides use the divide unit, which holds one divide at a time: not for an interrupt handler,
+/** @name Divides
+ * The divides use the divide unit, which holds one divide at a time: not for an interrupt handler,
  * and no other divide between a start and its collect. They round toward zero. A zero divisor or
  * a quotient out of range gives what the unit gives. A function elsewhere in the library that
  * uses the unit says so, and the same holds for it. */
+/** @{ */
 
-/* Starts a / b. The unit works for 39 clocks, the caller may do other work meanwhile */
+/** Starts a / b. The unit works for 39 clocks, the caller may do other work meanwhile */
 static inline void
 hx_div_start(hx_fix16_t a, hx_fix16_t b)
 {
@@ -99,7 +104,7 @@ hx_div_start(hx_fix16_t a, hx_fix16_t b)
         divu->dvdntl = (int32_t)((uint32_t)a << 16);
 }
 
-/* The quotient of the divide started, waiting for it if need be */
+/** The quotient of the divide started, waiting for it if need be */
 static inline hx_fix16_t
 hx_div_collect(void)
 {
@@ -114,13 +119,15 @@ hx_div(hx_fix16_t a, hx_fix16_t b)
         return hx_div_collect();
 }
 
-/* 0 for a value below 0. Never under the root, at most 1/65536 over */
+/** @} */
+
+/** 0 for a value below 0. Never under the root, at most 1/65536 over */
 hx_fix16_t hx_sqrt(hx_fix16_t value);
 
 /* The root of a value's top 8 bits by 4096, rounded down, and the step to the next */
 extern const uint16_t hx_priv_roots[256][2];
 
-/* A root that gives up places for speed: never over the root, up to 3% of it under. 0 for a
+/** A root that gives up places for speed: never over the root, up to 3% of it under. 0 for a
  * value below 0.
  *
  * Below 1/256 it is the root rounded down, and so is the root of a value below 1 with only its
@@ -163,7 +170,7 @@ hx_sqrt_fast(hx_fix16_t value)
         return (hx_fix16_t)((uint32_t)hx_priv_roots[bits >> 24][0] << 8);
 }
 
-/* One over the root, at most 1/65536 from the exact one rounded down, on either side. A power
+/** One over the root, at most 1/65536 from the exact one rounded down, on either side. A power
  * of 4 comes out 1/65536 short. 0 for a value of 0 or below. The largest result is 256 less
  * 1/65536, for 1/65536 */
 hx_fix16_t hx_rsqrt(hx_fix16_t value);

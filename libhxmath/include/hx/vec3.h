@@ -4,11 +4,14 @@
 #include <hx/types.h>
 #include <hx/fix16.h>
 
+/** @file
+ * 3D vectors. */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/* a plus b. Each coordinate wraps. The result may be a or b */
+/** a plus b. Each coordinate wraps. The result may be a or b */
 static inline void
 hx_vec3_add(const hx_vec3_t *a, const hx_vec3_t *b, hx_vec3_t *result)
 {
@@ -17,7 +20,7 @@ hx_vec3_add(const hx_vec3_t *a, const hx_vec3_t *b, hx_vec3_t *result)
         result->z = (hx_fix16_t)((uint32_t)a->z + (uint32_t)b->z);
 }
 
-/* a less b. Each coordinate wraps. The result may be a or b */
+/** a less b. Each coordinate wraps. The result may be a or b */
 static inline void
 hx_vec3_sub(const hx_vec3_t *a, const hx_vec3_t *b, hx_vec3_t *result)
 {
@@ -26,7 +29,7 @@ hx_vec3_sub(const hx_vec3_t *a, const hx_vec3_t *b, hx_vec3_t *result)
         result->z = (hx_fix16_t)((uint32_t)a->z - (uint32_t)b->z);
 }
 
-/* v by a scalar, each coordinate as hx_mul gives it: rounded down, and it wraps. The result may
+/** v by a scalar, each coordinate as hx_mul gives it: rounded down, and it wraps. The result may
  * be v */
 static inline void
 hx_vec3_scale(const hx_vec3_t *v, hx_fix16_t scalar, hx_vec3_t *result)
@@ -36,7 +39,7 @@ hx_vec3_scale(const hx_vec3_t *v, hx_fix16_t scalar, hx_vec3_t *result)
         result->z = hx_mul(v->z, scalar);
 }
 
-/* a plus b by a scalar: each coordinate is a's plus hx_mul of b's, and it wraps. The result may
+/** a plus b by a scalar: each coordinate is a's plus hx_mul of b's, and it wraps. The result may
  * be a or b */
 static inline void
 hx_vec3_add_scaled(const hx_vec3_t *a, const hx_vec3_t *b, hx_fix16_t scalar, hx_vec3_t *result)
@@ -46,7 +49,7 @@ hx_vec3_add_scaled(const hx_vec3_t *a, const hx_vec3_t *b, hx_fix16_t scalar, hx
         result->z = (hx_fix16_t)((uint32_t)a->z + (uint32_t)hx_mul(b->z, scalar));
 }
 
-/* The three products summed whole, then rounded down once. SR's S bit is taken as clear */
+/** The three products summed whole, then rounded down once. SR's S bit is taken as clear */
 static inline hx_fix16_t
 hx_vec3_dot(const hx_vec3_t *a, const hx_vec3_t *b)
 {
@@ -67,7 +70,7 @@ hx_vec3_dot(const hx_vec3_t *a, const hx_vec3_t *b)
         return (hx_fix16_t)low;
 }
 
-/* The squared length, exact for any vector: the sum of the squares with 32 fraction bits. SR's S
+/** The squared length, exact for any vector: the sum of the squares with 32 fraction bits. SR's S
  * bit is taken as clear */
 static inline uint64_t
 hx_vec3_length_squared(const hx_vec3_t *v)
@@ -90,7 +93,7 @@ hx_vec3_length_squared(const hx_vec3_t *v)
         return ((uint64_t)high << 32) | low;
 }
 
-/* The squared length as 16.16, hx_vec3_dot of v and itself. It fits while the length is under
+/** The squared length as 16.16, hx_vec3_dot of v and itself. It fits while the length is under
  * 181, past that it wraps */
 static inline hx_fix16_t
 hx_vec3_length_squared_fix16(const hx_vec3_t *v)
@@ -98,11 +101,11 @@ hx_vec3_length_squared_fix16(const hx_vec3_t *v)
         return hx_vec3_dot(v, v);
 }
 
-/* The length rounded down, exact for any vector. Past 32768 it wraps: read as unsigned it holds
+/** The length rounded down, exact for any vector. Past 32768 it wraps: read as unsigned it holds
  * for every vector */
 hx_fix16_t hx_vec3_length(const hx_vec3_t *v);
 
-/* A length that gives up places for speed, as hx_sqrt_fast does: never over the length, and from
+/** A length that gives up places for speed, as hx_sqrt_fast does: never over the length, and from
  * a length of 1/256 up at most 3% of it under. Below that it is up to 6% under, below 16/65536
  * it is the length rounded down, and it is 0 for (0, 0, 0) alone. Past 32768 it wraps as
  * hx_vec3_length does.
@@ -134,19 +137,20 @@ hx_vec3_length_fast(const hx_vec3_t *v)
         return (hx_fix16_t)((uint32_t)hx_sqrt_fast((hx_fix16_t)(uint32_t)square) >> 8);
 }
 
-/* The length of b less a, as hx_vec3_length gives it. The difference is taken whole, so read as
+/** The length of b less a, as hx_vec3_length gives it. The difference is taken whole, so read as
  * unsigned the result holds for two points under 65536 apart */
 hx_fix16_t hx_vec3_distance(const hx_vec3_t *a, const hx_vec3_t *b);
 
-/* a cross b: x by y is z. Each coordinate is two products taken apart whole, then rounded down
+/** a cross b: x by y is z. Each coordinate is two products taken apart whole, then rounded down
  * once. The result is neither a nor b */
 void hx_vec3_cross(const hx_vec3_t *a, const hx_vec3_t *b, hx_vec3_t *result);
 
-/* v at the length of one. A vector of any size, (0, 0, 0) stays as it is. The result may be v.
+/** v at the length of one. A vector of any size, (0, 0, 0) stays as it is. The result may be v.
  *
  * The plain one rounds each coordinate toward zero: a vector along an axis may come out 1/65536
  * short of one. The other rounds to the nearest, and such a vector comes out as one exactly */
 void hx_vec3_normalize(const hx_vec3_t *v, hx_vec3_t *result);
+/** @copydoc hx_vec3_normalize */
 void hx_vec3_normalize_round(const hx_vec3_t *v, hx_vec3_t *result);
 
 #ifdef __cplusplus

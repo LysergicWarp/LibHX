@@ -1,4 +1,5 @@
-/* libhxmath: fixed-point math for the SH-2.
+/** @file
+ * libhxmath: fixed-point math for the SH-2.
  *
  * Conventions, the same in every function:
  * - x right, y down, z into the screen.

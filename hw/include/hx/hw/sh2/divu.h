@@ -3,7 +3,8 @@
 
 #include <hx/hw/map.h>
 
-/* The SH-2's divide unit: 64 bits by 32 or 32 by 32, signed, in 39 clocks.
+/** @file
+ * The SH-2's divide unit: 64 bits by 32 or 32 by 32, signed, in 39 clocks.
  *
  * DVSR takes the divisor. A write to DVDNT starts 32 by 32, a write to DVDNTL starts 64 by 32
  * with DVDNTH written ahead of it. The quotient comes back where the write went, the remainder

@@ -1,0 +1,35 @@
+# The API reference, from the public headers. Doxygen runs in this folder and writes the pages
+# to src/api, which mdBook copies into the site with the rest of src.
+
+PROJECT_NAME          = LibHX
+OUTPUT_DIRECTORY      = src
+HTML_OUTPUT           = api
+GENERATE_LATEX        = NO
+QUIET                 = YES
+
+INPUT                 = ../hw/include \
+                        ../libhxmath/include \
+                        ../libhxrt/include \
+                        ../libhxtest/include
+FILE_PATTERNS         = *.h
+RECURSIVE             = YES
+STRIP_FROM_PATH       = ../hw/include \
+                        ../libhxmath/include \
+                        ../libhxrt/include \
+                        ../libhxtest/include
+STRIP_FROM_INC_PATH   = ../hw/include \
+                        ../libhxmath/include \
+                        ../libhxrt/include \
+                        ../libhxtest/include
+
+OPTIMIZE_OUTPUT_FOR_C = YES
+JAVADOC_AUTOBRIEF     = YES
+EXTRACT_ALL           = YES
+
+# The static inline calls read as plain ones, which @copydoc can name. The register maps' layout
+# checks are not listed.
+MACRO_EXPANSION       = YES
+EXPAND_ONLY_PREDEF    = YES
+PREDEFINED            = static=
+EXCLUDE_SYMBOLS       = hx_priv_* HX_PRIV_* HX_MAP_AT
+GENERATE_TREEVIEW     = YES

@@ -1,0 +1,68 @@
+# Builds the guides and the API reference, and publishes them with GitHub Pages.
+#
+# The same build by hand, in docs/: doxygen, then mdbook serve --open. The tools' versions are
+# the ones below.
+
+name: docs
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  MDBOOK_VERSION: 0.5.4
+  MDBOOK_SHA256: 3f28de05dafca9d0f2eab99c662116b0e37b89b1d96a08f8f430b9eeae958cd7
+  DOXYGEN_VERSION: 1.18.0
+  DOXYGEN_SHA256: 14fa81bdc34171edb5f1f02b1d60e74802f0439b77fa44e592565d517d72df90
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install mdBook and Doxygen
+        run: |
+          cd "$RUNNER_TEMP"
+          curl -fsSL -o mdbook.tar.gz \
+            "https://github.com/rust-lang/mdBook/releases/download/v${MDBOOK_VERSION}/mdbook-v${MDBOOK_VERSION}-x86_64-unknown-linux-gnu.tar.gz"
+          echo "${MDBOOK_SHA256}  mdbook.tar.gz" | sha256sum -c -
+          curl -fsSL -o doxygen.tar.gz \
+            "https://github.com/doxygen/doxygen/releases/download/Release_${DOXYGEN_VERSION//./_}/doxygen-${DOXYGEN_VERSION}.linux.bin.tar.gz"
+          echo "${DOXYGEN_SHA256}  doxygen.tar.gz" | sha256sum -c -
+          mkdir bin
+          tar -xzf mdbook.tar.gz -C bin
+          tar -xzf doxygen.tar.gz
+          cp "doxygen-${DOXYGEN_VERSION}/bin/doxygen" bin/
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+
+      - name: Build
+        working-directory: docs
+        run: |
+          doxygen
+          mdbook build
+
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: docs/book
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

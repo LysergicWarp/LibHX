@@ -7,7 +7,8 @@
 extern "C" {
 #endif
 
-/* A test disc's report: text in work RAM, read from outside once its mark is there.
+/** @file
+ * A test disc's report: text in work RAM, read from outside once its mark is there.
  *
  * The report is hx_test_report, HX_TEST_REPORT_SIZE bytes: 8 for the mark, then the text and
  * a 0. The mark is HX_TEST_MARK, written last, so a report that is there is whole.
@@ -23,10 +24,10 @@ extern "C" {
 #define HX_TEST_REPORT_SIZE 0x4000
 #define HX_TEST_MARK "HXREPORT"
 
-/* A row, which passes when got is wanted. The name holds no space and no line end */
+/** A row, which passes when got is wanted. The name holds no space and no line end */
 void hx_test_equal(const char *name, uint32_t got, uint32_t wanted);
 
-/* The last line, then the mark. The report is closed: a call of either function after this
+/** The last line, then the mark. The report is closed: a call of either function after this
  * does nothing */
 void hx_test_end(void);
 

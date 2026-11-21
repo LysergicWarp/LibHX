@@ -3,7 +3,8 @@
 
 #include <hx/hw/map.h>
 
-/* The SH-2's free-running timer: a 16-bit counter, two output compares and an input capture.
+/** @file
+ * The SH-2's free-running timer: a 16-bit counter, two output compares and an input capture.
  *
  * Every register is a byte to the CPU. FRC, OCRA, OCRB and ICR are 16 bits each, as two bytes:
  * the high byte first, then the low one, never one alone. ICR is read alone.

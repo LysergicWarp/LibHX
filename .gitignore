@@ -2,3 +2,7 @@
 /out/
 build/
 !/build/
+
+# The site, and the API reference Doxygen writes among its sources
+/docs/book/
+/docs/src/api/
