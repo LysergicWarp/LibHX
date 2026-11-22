@@ -3,8 +3,8 @@
 #   pwsh tools/hx-test.ps1 [-Runner <folder>] [-RunnerImage <image>] [-Bios <file>]
 #       [-Out <folder>] [-Image <image>] [-Region na|eu|jp] [-Frames <count>] [<test> ...]
 #
-# A test is a folder <library>/test/<name> of the clone, named here as <library>/<name>:
-# libhxrt/start. With none named, every test runs.
+# A test is a folder tests/<group>/<name> of the clone, named here as <group>/<name>:
+# startup/high-stack. With none named, every test runs.
 #
 #   -Runner        a folder that holds beetle-runner, a program that runs a libretro core
 #                  without a window, and mednafen_saturn_libretro.so, the Beetle Saturn core.
@@ -84,15 +84,12 @@ foreach ($name in $Image, $RunnerImage) {
     }
 }
 
-# The tests: every folder with a Makefile under a library's test folder
-$found = @(Get-ChildItem -LiteralPath $clone -Directory | ForEach-Object {
-    $library = $_.Name
-    $folder = Join-Path $_.FullName "test"
-    if (Test-Path -LiteralPath $folder) {
-        Get-ChildItem -LiteralPath $folder -Directory |
-            Where-Object { Test-Path -LiteralPath (Join-Path $_.FullName "Makefile") } |
-            ForEach-Object { "$library/$($_.Name)" }
-    }
+# The tests: every folder with a Makefile in a group's folder
+$found = @(Get-ChildItem -LiteralPath (Join-Path $clone "tests") -Directory | ForEach-Object {
+    $group = $_.Name
+    Get-ChildItem -LiteralPath $_.FullName -Directory |
+        Where-Object { Test-Path -LiteralPath (Join-Path $_.FullName "Makefile") } |
+        ForEach-Object { "$group/$($_.Name)" }
 } | Sort-Object)
 if ($Tests) {
     $Tests = @($Tests | ForEach-Object { $_.Replace("\", "/").Trim("/") })
@@ -144,7 +141,7 @@ $captureSize = 4096
 function Test-Disc {
     param([string] $Test)
 
-    $library, $name = $Test.Split("/")
+    $group, $name = $Test.Split("/")
     $folder = Join-Path $Out $Test
     if (Test-Path -LiteralPath $folder) {
         Remove-Item -LiteralPath $folder -Recurse -Force
@@ -159,7 +156,7 @@ function Test-Disc {
             --mount "type=bind,source=$clone,target=$($place.Clone),readonly" `
             --mount "type=bind,source=$build,target=$($place.Build)" `
             --mount "type=bind,source=$biosPath,target=/bios.bin,readonly" `
-            --workdir "$($place.Clone)/$library/test/$name" `
+            --workdir "$($place.Clone)/tests/$group/$name" `
             $Image make "--jobs=$jobs" "HX_OUT=$($place.Build)" HX_BIOS=/bios.bin 2>&1
         $failed = $LASTEXITCODE -ne 0
         $log | ForEach-Object { "$_" } | Add-Content -LiteralPath (Join-Path $folder "build.log")

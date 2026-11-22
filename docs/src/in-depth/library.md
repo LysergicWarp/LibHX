@@ -9,9 +9,9 @@ How a library's folder is laid out and built, with libhxmath as the example.
 | `include/hx/` | The public headers. The small functions are inline in them |
 | `src/` | The rest, in C and assembly (`*.sx`) |
 | `ref/` | A C reference for each assembly function |
-| `test/<name>/` | The library's [test discs](../guides/tests.md) |
 
-Hot paths are SH-2 assembly behind a C API.
+Hot paths are SH-2 assembly behind a C API. The [test discs](../guides/tests.md) are in a tree
+of their own, `tests/`, and belong to no library.
 
 libhxrt's `include/` also holds the C library's headers, under their standard names
 (`string.h`).

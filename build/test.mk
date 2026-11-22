@@ -1,9 +1,11 @@
 # A test disc: a program on the SDK that leaves a report in work RAM (libhxtest), and the disc
-# around it. A test sits in a folder of its own inside the clone, named for what it tests. Its
-# Makefile sets its sources and includes this by its path from there:
+# around it. A test sits in a folder of its own, tests/<group>/<name> of the clone: the group
+# is what it tests. Its Makefile sets its sources and includes this by its path from there:
 #
 #     HX_SOURCES:= main.c
 #     include ../../../build/test.mk
+#
+# Tests of a group that share a source keep it in the group's folder, as ../main.c.
 #
 # It may set the link's settings (program.mk), and:
 #   HX_TEST_CFLAGS         more for its C and its C++, as -D
@@ -23,6 +25,7 @@ HX_ROOT:= $(abspath $(dir $(lastword $(MAKEFILE_LIST)))..)
 HX_OUT?= build
 
 HX_TEST:= $(notdir $(CURDIR))
+HX_TEST_GROUP:= $(notdir $(patsubst %/,%,$(dir $(CURDIR))))
 HX_PROGRAM:= $(HX_OUT)/$(HX_TEST)
 
 # The names the right sides use come with program.mk
@@ -41,7 +44,7 @@ include $(HX_ROOT)/build/program.mk
 # One date for every test, so the same sources give the same disc
 HX_DISC:= $(HX_OUT)/$(HX_TEST)
 HX_DISC_FIRST:= $(HX_PROGRAM).bin
-HX_IP_TITLE:= HX TEST $(HX_TEST)
+HX_IP_TITLE:= HX TEST $(HX_TEST_GROUP) $(HX_TEST)
 HX_IP_DATE:= 20261120
 include $(HX_ROOT)/build/disc.mk
 

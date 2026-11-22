@@ -5,7 +5,8 @@ A test is a disc: a program that leaves a report in work RAM, a row for each thi
 
 ## Write a test
 
-A test is a folder `<library>/test/<name>` of the clone. Its `main.c`:
+A test is a folder `tests/<group>/<name>` of the clone. The group is what it tests: `startup`,
+`cartridge`. Its `main.c`:
 
 ```c
 #include <stdint.h>
@@ -41,20 +42,22 @@ HX_TEST_CORE_OPTIONS:= beetle_saturn_cart=extram4
 include ../../../build/test.mk
 ```
 
+Tests of a group that share a source keep it in the group's folder, and name it as `../main.c`.
+
 ## Run the tests
 
 ```
 pwsh tools/hx-test.ps1 -Runner <folder> -RunnerImage <image> -Bios <file>
 ```
 
-With no test named, every test runs. A test is named as `<library>/<name>`:
+With no test named, every test runs. A test is named as `<group>/<name>`:
 
 ```
-pwsh tools/hx-test.ps1 -Runner <folder> -RunnerImage <image> -Bios <file> libhxrt/start
+pwsh tools/hx-test.ps1 -Runner <folder> -RunnerImage <image> -Bios <file> startup/high-stack
 ```
 
 ```
-pass libhxrt/start: 28 rows
+pass startup/high-stack: 28 rows
 1 tests passed. Results in <clone>/out
 ```
 
@@ -67,14 +70,14 @@ pass libhxrt/start: 28 rows
 
 | Test | Checks |
 | --- | --- |
-| `libhxrt/start` | What `main` finds, with the stack at the top of Work RAM-H |
-| `libhxrt/start-low-stack` | The same with the stack below the program |
-| `libhxrt/cart` | What startup finds in the cartridge slot, and `hx_cart_require`, with no cartridge |
-| `libhxrt/cart-backup` | The same with a backup memory cartridge |
-| `libhxrt/cart-1mb`, `libhxrt/cart-4mb` | The same with each RAM cartridge, and that its memory holds |
-| `libhxrt/cart-1mb-joined`, `libhxrt/cart-4mb-joined` | The same with `HX_CART_JOIN` set |
-| `libhxrt/memory` | `memcpy`, `memmove`, `memset` and `memcmp`, at every length up to 72 bytes and every alignment |
-| `libhxmath/cxx` | The math headers from C++, linked against the archive |
+| `startup/high-stack` | What `main` finds, with the stack at the top of Work RAM-H |
+| `startup/low-stack` | The same with the stack below the program |
+| `cartridge/none` | What startup finds in the cartridge slot, and `hx_cart_require`, with no cartridge |
+| `cartridge/backup` | The same with a backup memory cartridge |
+| `cartridge/1mb`, `cartridge/4mb` | The same with each RAM cartridge, and that its memory holds |
+| `cartridge/1mb-joined`, `cartridge/4mb-joined` | The same with `HX_CART_JOIN` set |
+| `libc/memory` | `memcpy`, `memmove`, `memset` and `memcmp`, at every length up to 72 bytes and every alignment |
+| `math/cxx` | The math headers from C++, linked against the archive |
 
 ## More detail
 

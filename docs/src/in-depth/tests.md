@@ -39,10 +39,10 @@ In `-Out`:
 | File | What |
 | --- | --- |
 | `run.txt` | The clone's commit, the toolchain image and its checksum, the runner's image, the BIOS's checksum |
-| `<library>/<name>/first`, `second` | The test's two builds |
-| `<library>/<name>/build.log` | The builds' output |
-| `<library>/<name>/result.json`, `log.txt` | The runner's output |
-| `<library>/<name>/report.txt` | The report |
+| `<group>/<name>/first`, `second` | The test's two builds |
+| `<group>/<name>/build.log` | The builds' output |
+| `<group>/<name>/result.json`, `log.txt` | The runner's output |
+| `<group>/<name>/report.txt` | The report |
 
 ## The runner
 

@@ -65,7 +65,7 @@ pwsh tools/hx-test.ps1 [-Runner <folder>] [-RunnerImage <image>] [-Bios <file>]
 | `-Region` | The region the disc runs in | `na` |
 | `-Frames` | The frames a disc gets to leave its report | `3600` |
 
-A test is named as `<library>/<name>`, for the folder `<library>/test/<name>`. With none named,
+A test is named as `<group>/<name>`, for the folder `tests/<group>/<name>`. With none named,
 every test runs.
 
 The exit code is 0 when every test passes.
