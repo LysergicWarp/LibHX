@@ -32,6 +32,10 @@
 #
 #   beetle-runner --core <core> --image <cue> --bios <file> --region <region> --frames <count>
 #       --stop-address <address> --stop-ascii <text> --capture <address>:<length> ...
+#       --core-option <name>=<value> ...
+#
+# --core-option sets an option of the core, and is given once for each option a test names
+# (HX_TEST_CORE_OPTIONS, build/test.mk): the cartridge in the slot, for one.
 #
 # It runs the disc until the text is at the address in work RAM, or for the count of frames.
 # It exits with 0 when the text was there and with 2 when the frames ran out. It writes one
@@ -210,6 +214,10 @@ function Test-Disc {
     )
     for ($at = 0; $at -lt $size; $at += $captureSize) {
         $arguments += @("--capture", ("0x{0:X8}:{1}" -f ($address + $at), [Math]::Min($captureSize, $size - $at)))
+    }
+    # The core's options the test names, one a line
+    foreach ($option in @(Get-Content -LiteralPath (Join-Path $first "$name.options") | Where-Object { $_ })) {
+        $arguments += @("--core-option", $option)
     }
     $json = docker @arguments 2> (Join-Path $folder "log.txt")
     $exitCode = $LASTEXITCODE

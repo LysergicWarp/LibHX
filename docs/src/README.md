@@ -1,8 +1,8 @@
 # LibHX
 
 hx is a Sega Saturn SDK in C, with SH-2 assembly on its hot paths. It is in early development.
-The math library, the runtime's startup and the C library's memory functions are the code so
-far.
+The math library, the runtime's startup with the RAM cartridge, and the C library's memory
+functions are the code so far.
 
 ## Libraries
 

@@ -8,6 +8,7 @@ single objects go to Work RAM-L by name. `<string.h>` copies and fills memory.
 - The stack pointer at the stack's end.
 - The cache purged and on.
 - Every object without an initial value zeroed, and every other holding its own.
+- A RAM cartridge set up, when one is in the slot: [The cartridge](cartridge.md).
 - The vector table, GBR and the interrupt masks as the BIOS left them.
 
 `main` takes no arguments. If it returns, startup stops in a loop.

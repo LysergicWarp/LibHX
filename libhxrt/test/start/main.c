@@ -1,5 +1,6 @@
 #include <stdint.h>
 
+#include <hx/cart.h>
 #include <hx/hw/sh2/cache.h>
 #include <hx/start.h>
 #include <hx/test.h>
@@ -101,6 +102,9 @@ main(void)
         const uintptr_t stack_start = (uintptr_t)hx_stack_start;
         const uintptr_t stack_end = (uintptr_t)hx_stack_end;
         const uintptr_t frame = (uintptr_t)__builtin_frame_address(0);
+        /* What startup found in the cartridge slot is in .bss, and filled after the clear */
+        const volatile uint32_t * const cart = (const volatile uint32_t *)hx_cart_found();
+        const volatile uint32_t * const cart_end = cart + (sizeof(hx_cart_t) / sizeof *cart);
         uint32_t bss_left;
         uint32_t low_bss_left;
         uint32_t bytes;
@@ -117,7 +121,7 @@ main(void)
         *second = 0;
 
         /* Read ahead of the first row, which writes to .bss */
-        bss_left = left(bss_start, bss_end);
+        bss_left = left(bss_start, cart) | left(cart_end, bss_end);
         low_bss_left = left(low_bss_start, low_bss_end);
 
         hx_test_equal("data", data, 0x11223344);
@@ -125,6 +129,8 @@ main(void)
             ((uint32_t)data_words[0] << 16) | data_words[1], 0x55667788);
         hx_test_equal("data.words.last", data_words[2], 0x99AA);
         hx_test_equal("bss.whole", bss_left, 0);
+        /* The record's two bytes that startup never fills */
+        hx_test_equal("bss.cart", cart[1] & 0xFFFF, 0);
         hx_test_equal("bss.size",
             (uintptr_t)bss_end - (uintptr_t)bss_start >= HX_TEST_REPORT_SIZE, 1);
         hx_test_equal("bss", bss, 0);

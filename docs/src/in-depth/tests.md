@@ -27,6 +27,7 @@ end <rows> <failed>
 2. Compares the two builds. The archives, the program and the disc image have to be the same
    bytes.
 3. Runs the first build's disc until the report's mark is in work RAM, or the frames run out.
+   The core gets the options the test names.
 4. Reads the report.
 
 A test passes when its report is whole and every row in it passes.
@@ -51,9 +52,14 @@ That program is not part of the SDK. The script calls it as:
 ```
 beetle-runner --core <core> --image <cue> --bios <file> --region <region> --frames <count>
     --stop-address <address> --stop-ascii <text> --capture <address>:<length> ...
+    --core-option <name>=<value> ...
 ```
 
+- `--core-option` sets an option of the core. It is given once for each option the test names
+  in `HX_TEST_CORE_OPTIONS`: the cartridge in the slot, for one.
 - It runs the disc until the text is at the address in work RAM, or for the count of frames.
+  It looks for the text once a frame, after the frame has run. A test may count on that: text
+  the program takes away again within the frame is not found.
 - It exits with 0 when the text was there and with 2 when the frames ran out.
 - It writes one JSON object to its output. Its `captures` is a list in the order asked, each
   with `data`: the bytes at that address as hexadecimal digits.

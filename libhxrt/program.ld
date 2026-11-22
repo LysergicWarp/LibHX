@@ -9,6 +9,10 @@
  *   hx_stack_low    0 for a stack at the top of Work RAM-H, another value for one below the
  *                   program
  *   hx_stack_size   the stack's size at the top of Work RAM-H
+ *   hx_cart_join    0 for the 1 Mbyte cartridge's memory as its two blocks, 1 for startup to
+ *                   try it as one run
+ *
+ * Nothing is linked into the cartridge: startup finds it, and the program asks what is there.
  *
  * A name here has no _ ahead of it unless C is to reach it: C puts one ahead of its own. */
 
@@ -17,8 +21,6 @@ ENTRY(_hx_start)
 
 hx_low_ram_start = 0x00200000;
 hx_low_ram_end = 0x00300000;
-hx_cart_start = 0x02400000;
-hx_cart_end = 0x02800000;
 hx_high_ram_end = 0x06100000;
 
 /* Work RAM-H below this is the BIOS's own, and above that the second SH-2's stack when the
@@ -41,11 +43,11 @@ ASSERT(hx_load > hx_ip_end && hx_load < hx_high_ram_end - 4,
 ASSERT(hx_stack_size % 4 == 0, "hx_stack_size is no multiple of 4")
 ASSERT(hx_stack_end > hx_stack_start, "the stack has no size")
 ASSERT(hx_program_end > hx_load, "hx_stack_size leaves the program no memory")
+ASSERT(hx_cart_join == 0 || hx_cart_join == 1, "hx_cart_join is neither 0 nor 1")
 
 MEMORY
 {
         low_ram (rw) : ORIGIN = hx_low_ram_start, LENGTH = hx_low_ram_end - hx_low_ram_start
-        cart (rw) : ORIGIN = hx_cart_start, LENGTH = hx_cart_end - hx_cart_start
         high_ram (rwx) : ORIGIN = hx_load, LENGTH = hx_program_end - hx_load
 }
 
@@ -76,16 +78,6 @@ SECTIONS
                 . = ALIGN(4);
                 hx_low_ram_bss_end = .;
         } > low_ram AT> low_ram
-
-        .cart.data : {
-                *(.data.hx_cart.*)
-                . = ALIGN(4);
-        } > cart AT> high_ram
-
-        .cart.bss (NOLOAD) : {
-                *(.bss.hx_cart.*)
-                . = ALIGN(4);
-        } > cart AT> cart
 
         .data : {
                 *(.data .data.*)
@@ -148,11 +140,7 @@ _hx_high_ram_free = hx_bss_end;
 _hx_high_ram_end = hx_program_end;
 _hx_low_ram_free = hx_low_ram_bss_end;
 _hx_low_ram_end = hx_low_ram_end;
-_hx_cart_free = ADDR(.cart.bss) + SIZEOF(.cart.bss);
-_hx_cart_end = hx_cart_end;
 
 ASSERT(_hx_start == hx_load, "startup is not the program's first byte")
 ASSERT(SIZEOF(.init) == 0,
     "the program has a constructor or a destructor for startup to run, which it does not do")
-ASSERT(SIZEOF(.cart.data) == 0 && SIZEOF(.cart.bss) == 0,
-    "the program places data in the cartridge, which startup does not set up")

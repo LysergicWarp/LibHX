@@ -25,6 +25,10 @@
 #                      not set.
 #   HX_STACK_SIZE      the size of the stack at the top of Work RAM-H, a multiple of 4. 0x4000
 #                      when it is not set.
+#   HX_CART_JOIN       1 for startup to try the 1 Mbyte RAM cartridge's memory as one run,
+#                      where it is two runs of 512 kbytes. Experimental: it holds on the
+#                      cartridges whose first block shows again below the second, and the
+#                      program finds two runs on the others. 0 when it is not set.
 #   HX_IP_FIRST_READ   the address the BIOS loads the program to, as disc.mk has it
 #
 # The SDK fixes the SH-2, GCC's default calling convention, a section for each function and
@@ -51,6 +55,7 @@ include $(HX_ROOT)/build/fixed.mk
 include $(HX_ROOT)/build/libs.mk
 
 HX_STACK?= high
+HX_CART_JOIN?= 0
 HX_IP_FIRST_READ?= 0x06004000
 
 ifeq ($(HX_STACK),high)
@@ -63,10 +68,16 @@ else
   $(error HX_STACK is $(HX_STACK). It is high or low)
 endif
 
+ifeq ($(HX_CART_JOIN),0)
+else ifeq ($(HX_CART_JOIN),1)
+else
+  $(error HX_CART_JOIN is $(HX_CART_JOIN). It is 0 or 1)
+endif
+
 # What the objects are made with, and what the link is, beside the files themselves
 HX_PROGRAM_FLAGS:= HX_CC HX_CXX HX_PROGRAM_CFLAGS HX_PROGRAM_CXXFLAGS HX_PROGRAM_ASFLAGS
-HX_PROGRAM_SETTINGS:= HX_SOURCES HX_STACK HX_STACK_SIZE HX_IP_FIRST_READ HX_PROGRAM_ARCHIVES \
-    HX_OBJCOPY
+HX_PROGRAM_SETTINGS:= HX_SOURCES HX_STACK HX_STACK_SIZE HX_CART_JOIN HX_IP_FIRST_READ \
+    HX_PROGRAM_ARCHIVES HX_OBJCOPY
 
 # A value reaches the shell between single quotes
 $(foreach name,$(HX_PROGRAM_FLAGS) $(HX_PROGRAM_SETTINGS) HX_ROOT HX_OUT HX_PROGRAM HX_SOURCES, \
@@ -128,7 +139,8 @@ $(HX_PROGRAM_OBJ)/settings.ld: $(HX_PROGRAM_OBJ)/settings $(HX_PROGRAM_MAKEFILES
 	printf '%s\n' \
 	    'hx_load = $(HX_IP_FIRST_READ);' \
 	    'hx_stack_low = $(if $(filter low,$(HX_STACK)),1,0);' \
-	    'hx_stack_size = $(or $(strip $(HX_STACK_SIZE)),0);' > $@
+	    'hx_stack_size = $(or $(strip $(HX_STACK_SIZE)),0);' \
+	    'hx_cart_join = $(HX_CART_JOIN);' > $@
 
 define HX_PROGRAM_RULE
 $(call hx-program-object,$(1)): $(1) $(HX_PROGRAM_OBJ)/flags $(HX_PROGRAM_MAKEFILES)

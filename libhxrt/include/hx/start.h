@@ -6,12 +6,15 @@
  *
  * The BIOS loads the program to Work RAM-H and enters it at startup. Startup sets the stack,
  * turns the cache on, clears the zeroed data, copies the initial values that belong outside
- * Work RAM-H, and calls main without arguments. A return from main stops in a loop.
+ * Work RAM-H, looks into the cartridge slot, and calls main without arguments. A return from
+ * main stops in a loop.
  *
  * main finds:
  *   - the stack pointer at the stack's end
  *   - the cache purged and on, with four ways, for instructions and data both
  *   - every object without an initial value zeroed, and every other holding its own
+ *   - a RAM cartridge set up, when one is in the slot, and what was found there kept
+ *     (<hx/cart.h>)
  *   - the vector table, GBR and the interrupt masks of the SH-2 and the SCU as the BIOS left
  *     them. The table is the BIOS's own, and the SH-2's mask is open.
  *

@@ -6,6 +6,7 @@ Every choice of speed or behaviour the SDK leaves to the program.
 | --- | --- | --- | --- |
 | [`HX_STACK`](#hx_stack) | Where the stack is, `high` or `low` | The Makefile | `high` |
 | [`HX_STACK_SIZE`](#hx_stack_size) | The size of the stack at the top of Work RAM-H | The Makefile | `0x4000` |
+| [`HX_CART_JOIN`](#hx_cart_join) | The 1 Mbyte RAM cartridge's memory as one run, where the cartridge allows. Experimental | The Makefile | `0` |
 | [The level](#the-programs-level) | How the program's own code is optimised | The Makefile, in `HX_PROGRAM_CFLAGS` | No optimisation |
 
 - A switch in the Makefile is set ahead of the include of `build/program.mk`.
@@ -37,6 +38,25 @@ The size of the stack with `HX_STACK` as `high`, in bytes.
 - A size that leaves the program no memory stops the link too.
 - It is not set with `HX_STACK` as `low`. That stack has one size.
 
+## HX_CART_JOIN
+
+```make
+HX_CART_JOIN:= 1
+```
+
+> [!WARNING]
+> Experimental. Sega's manual gives the 1 Mbyte cartridge as two blocks and no more, so this
+> holds on some cartridges and not on others.
+
+| Value | The 1 Mbyte RAM cartridge's memory |
+| --- | --- |
+| `0` | Two runs of 512 kbytes |
+| `1` | One run of 1 Mbyte where startup finds the first block again just below the second, and the two runs where it does not |
+
+- A program that sets it still handles two runs.
+- It changes nothing with the 4 Mbyte cartridge, or with none.
+- Another value stops the build.
+
 ## The program's level
 
 ```make
@@ -53,6 +73,8 @@ one for its C++.
 ## More detail
 
 - [Startup and memory](../guides/memory.md#the-stack): the stack's place, with its bounds in C.
+- [The cartridge](../guides/cartridge.md#one-run-of-1-mbyte): what a program finds with
+  `HX_CART_JOIN` set.
 - [Startup and the linker script](../in-depth/startup.md#the-stack-below-the-program): what
   lies under the low stack.
 - [The build](../in-depth/build.md#what-the-sdk-fixes): the flags the SDK fixes, and why.

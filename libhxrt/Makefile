@@ -3,6 +3,7 @@
 include ../build/flags.mk
 
 HX_LIB_SOURCES:= \
+	cart.c \
 	memcmp.c \
 	memcpy.c \
 	memmove.c \

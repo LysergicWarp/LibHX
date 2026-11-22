@@ -3,7 +3,35 @@
  * The BIOS leaves its own vector table in place, interrupts open at the SH-2, and the stack
  * the disc's header names or one of its own. All of that but the stack is main's to find. */
 
+#include <hx/cart.h>
+#include <hx/hw/315/scu.h>
 #include <hx/hw/sh2/cache.h>
+
+#include "layout.h"
+
+/* The cartridge slot, past the cache: its ID byte, and where a RAM cartridge takes the word
+ * that sets it up */
+#define CART_ID 0x24FFFFFF
+#define CART_SET_UP 0x257EFFFE
+
+/* A RAM cartridge's memory, through the cache. 4 Mbytes are one block. 1 Mbyte is two blocks
+ * of 512 kbytes, and on some cartridges the first shows again just below the second */
+#define CART_BLOCK 0x02400000
+#define CART_SECOND_BLOCK 0x02600000
+#define CART_BLOCK_SIZE 0x00080000
+#define CART_MIRROR (CART_SECOND_BLOCK - CART_BLOCK_SIZE)
+
+/* The A-Bus set register with a RAM cartridge in, 0x23301FF0. CS0, where its memory is: a
+ * precharge after a read, and 3 waits, burst and normal. CS1 as the BIOS leaves it: the
+ * external wait, and 15 waits */
+#define CART_ASR0 (SCU_ASR0_A0RPC | 0x03000000 | 0x00300000 | SCU_ASR0_A1EWT | SCU_ASR0_A1BW \
+    | SCU_ASR0_A1NW)
+
+/* The refresh register: refresh on, 3 waits */
+#define CART_AREF (SCU_AREF_ARFEN | 3)
+
+/* What the mirror's test writes, and its inverse */
+#define CART_PATTERN 0xA55A3CC3
 
         .section .text.hx_start, "ax", @progbits
 
@@ -50,6 +78,74 @@ _hx_start:
         bf/s    1b
         mov.l   r5, @(r0, r3)
 2:
+        /* The cartridge slot. The ID byte is read first, and nothing is written to the slot
+         * for another ID than a RAM cartridge's. r4 is the record, zeroed above, and r5 the
+         * ID byte's address */
+        mov.l   .Lcart, r4
+        mov.l   .Lcart_id, r5
+        mov.b   @r5, r0
+        extu.b  r0, r0
+        mov.b   r0, @(HX_CART_ID, r4)
+        cmp/eq  #HX_CART_ID_4MB, r0
+        bt      .Lcart_4mb
+        cmp/eq  #HX_CART_ID_1MB, r0
+        bf      .Lcart_end
+
+        /* 1 Mbyte: two runs */
+        bsr     .Lcart_set_up
+        nop
+        mov.l   .Lcart_block, r1
+        mov.l   .Lcart_block_size, r2
+        mov     #2, r0
+        mov.b   r0, @(HX_CART_RUN_COUNT, r4)
+        mov.l   r1, @(HX_CART_RUNS + HX_CART_RUN_START, r4)
+        mov.l   r2, @(HX_CART_RUNS + HX_CART_RUN_SIZE, r4)
+        mov.l   .Lcart_second_block, r1
+        mov.l   r1, @(HX_CART_RUNS + HX_CART_RUN_T_SIZE + HX_CART_RUN_START, r4)
+        mov.l   r2, @(HX_CART_RUNS + HX_CART_RUN_T_SIZE + HX_CART_RUN_SIZE, r4)
+        add     r2, r2
+        mov.l   r2, @(HX_CART_SIZE, r4)
+
+        /* One run instead, when the program's build asks for it and the first block shows
+         * again below the second. Tried at the block's first long and at its last */
+        mov.l   .Lcart_join, r0
+        tst     r0, r0
+        bt      .Lcart_end
+        mov.l   .Lcart_block_through, r1
+        mov.l   .Lcart_mirror_through, r2
+        bsr     .Lcart_mirrored
+        nop
+        bf      .Lcart_end
+        mov.l   .Lcart_block_last, r0
+        add     r0, r1
+        add     r0, r2
+        bsr     .Lcart_mirrored
+        nop
+        bf      .Lcart_end
+        mov.l   .Lcart_mirror, r1
+        mov.l   @(HX_CART_SIZE, r4), r2
+        mov     #1, r0
+        mov.b   r0, @(HX_CART_RUN_COUNT, r4)
+        mov.l   r1, @(HX_CART_RUNS + HX_CART_RUN_START, r4)
+        mov.l   r2, @(HX_CART_RUNS + HX_CART_RUN_SIZE, r4)
+        mov     #0, r0
+        mov.l   r0, @(HX_CART_RUNS + HX_CART_RUN_T_SIZE + HX_CART_RUN_START, r4)
+        bra     .Lcart_end
+        mov.l   r0, @(HX_CART_RUNS + HX_CART_RUN_T_SIZE + HX_CART_RUN_SIZE, r4)
+
+        /* 4 Mbytes: one run */
+.Lcart_4mb:
+        bsr     .Lcart_set_up
+        nop
+        mov.l   .Lcart_block, r1
+        mov.l   .Lcart_4mb_size, r2
+        mov     #1, r0
+        mov.b   r0, @(HX_CART_RUN_COUNT, r4)
+        mov.l   r2, @(HX_CART_SIZE, r4)
+        mov.l   r1, @(HX_CART_RUNS + HX_CART_RUN_START, r4)
+        mov.l   r2, @(HX_CART_RUNS + HX_CART_RUN_SIZE, r4)
+.Lcart_end:
+
         mov.l   .Lmain, r0
         jsr     @r0
         nop
@@ -58,6 +154,45 @@ _hx_start:
 .Lstop:
         bra     .Lstop
         nop
+
+/* Sets a RAM cartridge up, in the order of Sega's manual for it: the word 1 to the set-up
+ * address, then the A-Bus's set register and its refresh register. The set register is
+ * written with the A-Bus idle after a read, so the ID byte is read once more between.
+ * r5 is the ID byte's address */
+.Lcart_set_up:
+        mov.l   .Lcart_set_up_at, r1
+        mov     #1, r0
+        mov.w   r0, @r1
+        mov.b   @r5, r0
+        mov.l   .Lasr0, r1
+        mov.l   .Lcart_asr0, r0
+        mov.l   r0, @r1
+        mov.l   .Laref, r1
+        mov     #CART_AREF, r0
+        rts
+        mov.l   r0, @r1
+
+/* T is set when the long at r1 and the long at r2 are the same memory: what is written at
+ * one is read at the other, both ways. Both hold at the end what they held. Between the
+ * second write and its read comes a read from elsewhere, so the value read is not one the
+ * bus still held. r5 is the ID byte's address */
+.Lcart_mirrored:
+        mov.l   @r1, r7
+        mov.l   @r2, r6
+        mov.l   .Lcart_pattern, r3
+        mov.l   r3, @r2
+        mov.l   @r1, r0
+        cmp/eq  r3, r0
+        bf      1f
+        not     r3, r3
+        mov.l   r3, @r1
+        mov.b   @r5, r0
+        mov.l   @r2, r0
+        cmp/eq  r3, r0
+1:
+        mov.l   r6, @r2
+        rts
+        mov.l   r7, @r1
 
 /* Zeroes the longs from r1 up to r2, from the top down: the ones over a count of 8, then 8
  * a pass. The SH-2 stores with a step down, and with none up */
@@ -109,5 +244,37 @@ _hx_start:
         .long   hx_low_ram_data_end
 .Llow_ram_data_load:
         .long   hx_low_ram_data_load
+.Lcart:
+        .long   _hx_priv_cart
+.Lcart_id:
+        .long   CART_ID
+.Lcart_set_up_at:
+        .long   CART_SET_UP
+.Lasr0:
+        .long   SCU_ASR0
+.Lcart_asr0:
+        .long   CART_ASR0
+.Laref:
+        .long   SCU_AREF
+.Lcart_block:
+        .long   CART_BLOCK
+.Lcart_second_block:
+        .long   CART_SECOND_BLOCK
+.Lcart_block_size:
+        .long   CART_BLOCK_SIZE
+.Lcart_4mb_size:
+        .long   HX_CART_4MB
+.Lcart_join:
+        .long   hx_cart_join
+.Lcart_block_through:
+        .long   CART_BLOCK + SH2_CACHE_THROUGH
+.Lcart_mirror_through:
+        .long   CART_MIRROR + SH2_CACHE_THROUGH
+.Lcart_block_last:
+        .long   CART_BLOCK_SIZE - 4
+.Lcart_mirror:
+        .long   CART_MIRROR
+.Lcart_pattern:
+        .long   CART_PATTERN
 .Lmain:
         .long   _main

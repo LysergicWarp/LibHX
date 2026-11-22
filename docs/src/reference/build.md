@@ -30,7 +30,7 @@ It may set:
 | `HX_IP_FIRST_READ` | The address the BIOS loads the program to, as `disc.mk` has it. `0x06004000` when it is not set |
 | `HX_CC`, `HX_CXX`, `HX_AR`, `HX_OBJCOPY` | The SH-2 tools, when they are not the ones on the path (`sh2eb-elf-gcc` and the rest) |
 
-And the [switches](switches.md): `HX_STACK` and `HX_STACK_SIZE`.
+And the [switches](switches.md): `HX_STACK`, `HX_STACK_SIZE` and `HX_CART_JOIN`.
 
 ## libs.mk
 
@@ -51,11 +51,12 @@ The program sets `HX_ROOT` and `HX_OUT`, and may set `HX_CC` and `HX_AR`. It get
 A [test disc](../guides/tests.md): `program.mk` and `disc.mk` with their settings filled in. A
 test's Makefile sets `HX_SOURCES` and includes it by its path from the test's folder.
 
-It may set `HX_STACK`, `HX_STACK_SIZE` and `HX_IP_FIRST_READ`, and:
+It may set `HX_STACK`, `HX_STACK_SIZE`, `HX_CART_JOIN` and `HX_IP_FIRST_READ`, and:
 
 | Setting | What |
 | --- | --- |
 | `HX_TEST_CFLAGS` | More for its C and its C++, as `-D` |
+| `HX_TEST_CORE_OPTIONS` | The options of the emulator's core its run needs, each as `<name>=<value>`: the cartridge in the slot, for one |
 
 make takes:
 
@@ -71,5 +72,6 @@ The build gives, by the test's folder name:
 | `HX_OUT/<folder>.cue` | The disc |
 | `HX_OUT/<folder>.elf` | The program |
 | `HX_OUT/<folder>.nm` | The program's symbols, each with its address and size |
+| `HX_OUT/<folder>.options` | The core's options, one a line |
 
 A test is C23 or C++23 at `-O2` with debug data and the SDK's warnings.

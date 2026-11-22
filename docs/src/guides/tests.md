@@ -33,6 +33,14 @@ HX_SOURCES:= main.c
 include ../../../build/test.mk
 ```
 
+A test that needs a cartridge in the slot names the core's option for it:
+
+```make
+HX_SOURCES:= main.c
+HX_TEST_CORE_OPTIONS:= beetle_saturn_cart=extram4
+include ../../../build/test.mk
+```
+
 ## Run the tests
 
 ```
@@ -46,7 +54,7 @@ pwsh tools/hx-test.ps1 -Runner <folder> -RunnerImage <image> -Bios <file> libhxr
 ```
 
 ```
-pass libhxrt/start: 27 rows
+pass libhxrt/start: 28 rows
 1 tests passed. Results in <clone>/out
 ```
 
@@ -61,6 +69,10 @@ pass libhxrt/start: 27 rows
 | --- | --- |
 | `libhxrt/start` | What `main` finds, with the stack at the top of Work RAM-H |
 | `libhxrt/start-low-stack` | The same with the stack below the program |
+| `libhxrt/cart` | What startup finds in the cartridge slot, and `hx_cart_require`, with no cartridge |
+| `libhxrt/cart-backup` | The same with a backup memory cartridge |
+| `libhxrt/cart-1mb`, `libhxrt/cart-4mb` | The same with each RAM cartridge, and that its memory holds |
+| `libhxrt/cart-1mb-joined`, `libhxrt/cart-4mb-joined` | The same with `HX_CART_JOIN` set |
 | `libhxrt/memory` | `memcpy`, `memmove`, `memset` and `memcmp`, at every length up to 72 bytes and every alignment |
 | `libhxmath/cxx` | The math headers from C++, linked against the archive |
 
