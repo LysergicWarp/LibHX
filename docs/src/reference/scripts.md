@@ -62,7 +62,7 @@ pwsh tools/hx-test.ps1 [-Runner <folder>] [-RunnerImage <image>] [-Bios <file>]
 | `-Bios` | The BIOS file | `HX_BIOS` |
 | `-Out` | Where the builds and the results go. A test's folder there is emptied first | `out`, in the clone |
 | `-Image` | The toolchain image | `hx/toolchain:gcc-16.2.0-binutils-2.47` |
-| `-Region` | The region the disc runs in | `na` |
+| `-Region` | The region the disc runs in. A test is built for it too, as `HX_TEST_REGION` | `na` |
 | `-Frames` | The frames a disc gets to leave its report | `3600` |
 
 A test is named as `<group>/<name>`, for the folder `tests/<group>/<name>`. With none named,

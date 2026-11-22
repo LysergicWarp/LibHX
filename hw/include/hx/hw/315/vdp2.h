@@ -4,14 +4,22 @@
 #include <hx/hw/map.h>
 
 /** @file
- * VDP2's registers: 142 of 16 bits each, and two reserved words among them. The addresses are
- * the ones past the SH-2's cache.
+ * VDP2's memory and its registers: 142 of 16 bits each, and two reserved words among them. The
+ * addresses are the ones past the SH-2's cache.
  *
  * TVMD, EXTEN, VRSIZE and RAMCTL are written and can be read back, VRSIZE's version number read
  * alone. TVSTAT, HCNT and VCNT are read alone. No other is marked as readable.
  *
  * Two reads do something: one of EXTEN latches the counters while its EXLTEN is 0, and one of
- * TVSTAT clears its EXLTFG and EXSYFG. */
+ * TVSTAT clears its EXLTFG and EXSYFG.
+ *
+ * The bits are named for TVMD, TVSTAT and BKTAU alone. */
+
+/* VRAM, 512 kbytes, and the colour RAM, 4 kbytes */
+#define VDP2_VRAM 0x25E00000
+#define VDP2_VRAM_SIZE 0x80000
+#define VDP2_CRAM 0x25F00000
+#define VDP2_CRAM_SIZE 0x1000
 
 /* The screen: its mode, the external signals, its status, the VRAM size, the two counters, the
  * RAM control */
@@ -195,6 +203,28 @@
 #define VDP2_COBR 0x25F8011A
 #define VDP2_COBG 0x25F8011C
 #define VDP2_COBB 0x25F8011E
+
+/* The display on, the border in the back screen's colour where 0 is black, then three fields:
+ * the interlace mode, the lines, the width */
+#define VDP2_TVMD_DISP 0x8000
+#define VDP2_TVMD_BDCLMD 0x0100
+#define VDP2_TVMD_LSMD 0x00C0
+#define VDP2_TVMD_VRESO 0x0030
+#define VDP2_TVMD_HRESO 0x0007
+
+/* The counters latched by the external signal, the external sync taken, the vertical blank, the
+ * horizontal blank, the odd field, a PAL console */
+#define VDP2_TVSTAT_EXLTFG 0x0200
+#define VDP2_TVSTAT_EXSYFG 0x0100
+#define VDP2_TVSTAT_VBLANK 0x0008
+#define VDP2_TVSTAT_HBLANK 0x0004
+#define VDP2_TVSTAT_ODD 0x0002
+#define VDP2_TVSTAT_PAL 0x0001
+
+/* A colour for each line where 0 is one for the screen, and the top 3 bits of the back screen
+ * table's address, which counts words of VRAM */
+#define VDP2_BKTAU_BKCLMD 0x8000
+#define VDP2_BKTAU_BKTA 0x0007
 
 #ifndef __ASSEMBLER__
 

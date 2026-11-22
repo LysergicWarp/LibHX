@@ -9,21 +9,21 @@ BIOS loads.
 `main.c`, in a folder `game` beside the clone:
 
 ```c
-#include <hx/math.h>
+#include <hx/vdp2.h>
 
 int
 main(void)
 {
-        hx_mat_t turn;
-
-        hx_mat_rotation_y(HX_DEG(45), &turn);
+        vdp2_start();
+        vdp2_back_color(0x7FFFE, VDP2_RGB(0, 0, 31));
+        vdp2_screen(VDP2_WIDTH_320, VDP2_HEIGHT_224, VDP2_INTERLACE_NONE, VDP2_BORDER_BLACK);
 
         for (;;) {
         }
 }
 ```
 
-hx has no video driver yet, so this program shows nothing. It builds a matrix and waits.
+This program turns the screen blue and waits.
 
 ## The Makefile
 
@@ -68,4 +68,5 @@ Next: [Building a disc](disc.md).
   among them.
 - [Build settings](../reference/build.md): every setting of `program.mk`.
 - [Startup and memory](../guides/memory.md): what `main` finds.
+- [VDP2](../guides/vdp2.md): the three calls of the source.
 - [The build](../in-depth/build.md): the flags the SDK fixes, the link, what is built anew.

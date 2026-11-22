@@ -12,6 +12,7 @@
 
 - [Startup and memory](guides/memory.md)
 - [The cartridge](guides/cartridge.md)
+- [VDP2](guides/vdp2.md)
 - [Fixed-point math](guides/math.md)
 - [Register maps](guides/registers.md)
 - [Test discs](guides/tests.md)

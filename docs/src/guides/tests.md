@@ -44,6 +44,25 @@ include ../../../build/test.mk
 
 Tests of a group that share a source keep it in the group's folder, and name it as `../main.c`.
 
+## Check the picture
+
+A test that draws names the picture its run is to show, and the script compares a screenshot
+with it:
+
+```make
+HX_SOURCES:= main.c
+HX_TEST_SCREEN_WIDTH:= 320
+HX_TEST_SCREEN_LINES:= 112:001f 112:7c00
+HX_TEST_SCREEN_BORDER:= 0000
+include ../../../build/test.mk
+```
+
+- `HX_TEST_SCREEN_LINES` is the picture from the top: 112 lines of red, then 112 of blue.
+- A colour is 4 hexadecimal digits, the 15 bits VDP2 has it in: what `VDP2_RGB` gives.
+- `HX_TEST_SCREEN_BORDER` is the colour around the picture.
+- The screenshot is taken after the report is there, so the program keeps its picture on
+  screen past `hx_test_end`.
+
 ## Run the tests
 
 ```
@@ -78,10 +97,13 @@ pass startup/high-stack: 28 rows
 | `cartridge/1mb-joined`, `cartridge/4mb-joined` | The same with `HX_CART_JOIN` set |
 | `libc/memory` | `memcpy`, `memmove`, `memset` and `memcmp`, at every length up to 72 bytes and every alignment |
 | `math/cxx` | The math headers from C++, linked against the archive |
+| `vdp2/back-color` | VDP2's start and screen mode, and the back screen in one colour with the border in it too |
+| `vdp2/back-lines` | The same with a colour for each line, and a black border |
 
 ## More detail
 
 - API: [`<hx/test.h>`](../api/test_8h.html).
 - [Scripts](../reference/scripts.md#hx-testps1): every option of `hx-test.ps1`.
 - [Build settings](../reference/build.md#testmk): the settings of a test's Makefile.
-- [The test flow](../in-depth/tests.md): the report's text, the two builds, the results folder.
+- [The test flow](../in-depth/tests.md): the report's text, the two builds, the screenshot,
+  the results folder.

@@ -1,8 +1,8 @@
 # LibHX
 
 hx is a Sega Saturn SDK in C, with SH-2 assembly on its hot paths. It is in early development.
-The math library, the runtime's startup with the RAM cartridge, and the C library's memory
-functions are the code so far.
+The math library, the runtime's startup with the RAM cartridge, the C library's memory
+functions, and VDP2's start with its back screen are the code so far.
 
 ## Libraries
 
@@ -14,7 +14,7 @@ Each library depends only on those below it. `libhx2d` and `libhxio` sit side by
 | `libhx3d` | 3D pipeline | Planned |
 | `libhx2d` | 2D helpers: sprites, tile maps, fonts | Planned |
 | `libhxio` | Files on disc, loading and decompression | Planned |
-| `lib315` | Drivers for Sega's chips: VDP1, VDP2, SCU, SMPC, sound, CD block, MPEG card | Planned |
+| [`lib315`](guides/vdp2.md) | Drivers for Sega's chips: VDP1, VDP2, SCU, SMPC, sound, CD block, MPEG card | In progress |
 | [`libhxrt`](guides/memory.md) | Runtime: startup, interrupts, DMA, memory, the second SH-2, the C library | In progress |
 | [`libhxmath`](guides/math.md) | Fixed point, trig, vectors, matrices | In progress |
 

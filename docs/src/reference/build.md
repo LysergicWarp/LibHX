@@ -57,6 +57,9 @@ It may set `HX_STACK`, `HX_STACK_SIZE`, `HX_CART_JOIN` and `HX_IP_FIRST_READ`, a
 | --- | --- |
 | `HX_TEST_CFLAGS` | More for its C and its C++, as `-D` |
 | `HX_TEST_CORE_OPTIONS` | The options of the emulator's core its run needs, each as `<name>=<value>`: the cartridge in the slot, for one |
+| `HX_TEST_SCREEN_LINES` | The picture its run is to show, from the top: each `<lines>:<colour>` is that many lines of one colour. A colour is 4 hexadecimal digits, the 15 bits VDP2 has it in |
+| `HX_TEST_SCREEN_WIDTH` | The picture's width in pixels. Set with `HX_TEST_SCREEN_LINES` |
+| `HX_TEST_SCREEN_BORDER` | The colour around the picture. Set with `HX_TEST_SCREEN_LINES` |
 
 make takes:
 
@@ -64,6 +67,7 @@ make takes:
 | --- | --- |
 | `HX_OUT` | The folder of the build. `build`, in the test's folder, when it is not given |
 | `HX_BIOS` | The BIOS file |
+| `HX_TEST_REGION` | The region of the console the disc is run on: `na`, `eu` or `jp`. `na` when it is not given. A test's sources see `HX_TEST_PAL`, 1 for `eu` and 0 otherwise |
 
 The build gives, by the test's folder name:
 
@@ -73,5 +77,6 @@ The build gives, by the test's folder name:
 | `HX_OUT/<folder>.elf` | The program |
 | `HX_OUT/<folder>.nm` | The program's symbols, each with its address and size |
 | `HX_OUT/<folder>.options` | The core's options, one a line |
+| `HX_OUT/<folder>.screen` | The picture: the width and the border's colour, then a line for each run of lines. No line when the test names no picture |
 
 A test is C23 or C++23 at `-O2` with debug data and the SDK's warnings.

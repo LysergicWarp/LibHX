@@ -22,15 +22,29 @@ end <rows> <failed>
 
 ## What the script does
 
-1. Builds the test from nothing, twice. The clone and the build folder are at other places the
-   second time.
+1. Builds the test from nothing, twice, for the region it will run in. The clone and the
+   build folder are at other places the second time.
 2. Compares the two builds. The archives, the program and the disc image have to be the same
    bytes.
 3. Runs the first build's disc until the report's mark is in work RAM, or the frames run out.
    The core gets the options the test names.
 4. Reads the report.
+5. For a test that names a picture, runs the disc again and compares a screenshot with it.
 
-A test passes when its report is whole and every row in it passes.
+A test passes when its report is whole, every row in it passes, and the screenshot is the
+picture it names.
+
+## The screenshot
+
+The first run ends at the frame the report is found after. The second has no stop: it runs
+two frames further, and that last frame is the screenshot.
+
+- The picture sits in the screenshot's middle. The pixels around it are the border.
+- Every pixel is compared, the picture's with its line's colour and the others with the
+  border's.
+- A colour is compared by 5 bits each of red, green and blue, as VDP2 has it.
+- A picture in its border's colour does not show its size: any screenshot that large or
+  larger in the one colour passes.
 
 ## The results
 
@@ -43,6 +57,8 @@ In `-Out`:
 | `<group>/<name>/build.log` | The builds' output |
 | `<group>/<name>/result.json`, `log.txt` | The runner's output |
 | `<group>/<name>/report.txt` | The report |
+| `<group>/<name>/screen.bmp` | The screenshot, for a test that names a picture |
+| `<group>/<name>/screen.json`, `screen-log.txt` | The runner's output on the run for the screenshot |
 
 ## The runner
 
@@ -55,6 +71,13 @@ beetle-runner --core <core> --image <cue> --bios <file> --region <region> --fram
     --core-option <name>=<value> ...
 ```
 
+and, for the screenshot, as:
+
+```
+beetle-runner --core <core> --image <cue> --bios <file> --region <region> --frames <count>
+    --screenshot <frame>:<file> --core-option <name>=<value> ...
+```
+
 - `--core-option` sets an option of the core. It is given once for each option the test names
   in `HX_TEST_CORE_OPTIONS`: the cartridge in the slot, for one.
 - It runs the disc until the text is at the address in work RAM, or for the count of frames.
@@ -62,5 +85,9 @@ beetle-runner --core <core> --image <cue> --bios <file> --region <region> --fram
   the program takes away again within the frame is not found.
 - It exits with 0 when the text was there and with 2 when the frames ran out.
 - It writes one JSON object to its output. Its `captures` is a list in the order asked, each
-  with `data`: the bytes at that address as hexadecimal digits.
+  with `data`: the bytes at that address as hexadecimal digits. Its `framesExecuted` is the
+  count of frames it ran.
 - A capture is 4096 bytes at most.
+- With no text to stop on, it runs for the count of frames and exits with 0.
+- `--screenshot` writes the picture of a frame, counted from 1, to a file: a BMP of 32 bits a
+  pixel, the top row first. The two runs of a disc give the same frames.

@@ -86,7 +86,8 @@ main(void)
 - The size is in bytes. A program that asks for `HX_CART_1MB` passes with either cartridge.
 
 > [!NOTE]
-> hx has no video driver yet, so the function has nothing to draw its message with.
+> hx draws no text yet. The function can show a colour, with
+> [the back screen](vdp2.md#a-colour-on-screen).
 
 ## The disc's header
 

@@ -15,6 +15,8 @@
 #   -Out           where the builds and the results go. out, in the clone, when it is not
 #                  given. A test's folder there is emptied first.
 #   -Image         the toolchain image
+#   -Region        the region the disc runs in. A test is built for it too (HX_TEST_REGION,
+#                  build/test.mk).
 #   -Frames        the frames a disc gets to leave its report
 #
 # Each test is built twice, with the clone and the build at other places the second time, and
@@ -22,9 +24,14 @@
 # disc is run until the report's mark is in work RAM. A test passes when its report is whole
 # and every row in it passes.
 #
+# A test may name the picture its run is to show (HX_TEST_SCREEN_LINES, build/test.mk). Its
+# disc is then run again, with no stop, two frames past the one the report was found after.
+# That frame's screenshot has to be the picture, pixel for pixel.
+#
 # In -Out: run.txt names the clone's commit, the toolchain image and its checksum, the runner's
 # image and the BIOS's checksum. A test's folder holds its two builds (first, second),
-# build.log, the runner's result.json and log.txt, and report.txt.
+# build.log, the runner's result.json and log.txt, and report.txt. With a picture it holds
+# screen.bmp too, and the second run's screen.json and screen-log.txt.
 #
 # The exit code is 0 when every test passes.
 #
@@ -40,7 +47,15 @@
 # It runs the disc until the text is at the address in work RAM, or for the count of frames.
 # It exits with 0 when the text was there and with 2 when the frames ran out. It writes one
 # JSON object to its output, whose "captures" is a list in the order asked, each with "data":
-# the bytes at that address as hexadecimal digits. A capture is 4096 bytes at most.
+# the bytes at that address as hexadecimal digits, and whose "framesExecuted" is the count of
+# frames it ran. A capture is 4096 bytes at most.
+#
+# For the screenshot it is called with no stop, and with
+#
+#       --screenshot <frame>:<file>
+#
+# It then runs for the count of frames, exits with 0, and writes the picture of that frame,
+# counted from 1, to the file: a BMP of 32 bits a pixel, the top row first.
 [CmdletBinding(PositionalBinding = $false)]
 param(
     [string] $Runner = $env:HX_RUNNER,
@@ -138,6 +153,63 @@ $jobs = [Environment]::ProcessorCount
 $markSize = 8
 $captureSize = 4096
 
+# The screenshot against the picture a test names: its width and the colour around it, then a
+# line for each run of lines. The picture sits in the screenshot's middle. A colour is compared
+# by the 5 bits of each of blue, green and red.
+function Compare-Screen {
+    param([string] $Path, [string[]] $Screen)
+
+    if ($Screen[0] -cnotmatch '^(\d+) ([0-9a-f]{4})$') {
+        return "the test's picture has no width and border colour: $($Screen[0])"
+    }
+    $width = [int] $Matches[1]
+    $border = [Convert]::ToInt32($Matches[2], 16) -band 0x7FFF
+    $lines = @()
+    foreach ($run in $Screen | Select-Object -Skip 1) {
+        if ($run -cnotmatch '^(\d+) ([0-9a-f]{4})$') {
+            return "the test's picture holds a run that is no <lines>:<colour>: $run"
+        }
+        $lines += @([Convert]::ToInt32($Matches[2], 16) -band 0x7FFF) * [int] $Matches[1]
+    }
+
+    $bytes = [IO.File]::ReadAllBytes($Path)
+    if ($bytes.Length -lt 54 -or $bytes[0] -ne 0x42 -or $bytes[1] -ne 0x4D -or
+        [BitConverter]::ToUInt16($bytes, 28) -ne 32 -or [BitConverter]::ToInt32($bytes, 30) -ne 0) {
+        return "the screenshot is no 32-bit BMP without compression"
+    }
+    $data = [BitConverter]::ToInt32($bytes, 10)
+    $across = [BitConverter]::ToInt32($bytes, 18)
+    $down = -[BitConverter]::ToInt32($bytes, 22)
+    if ($down -le 0) {
+        return "the screenshot's first row is not its top one"
+    }
+    if ($across -le 0 -or $data -lt 54 -or $bytes.Length -lt $data + [long] $across * $down * 4) {
+        return "the screenshot is shorter than its $across by $down pixels"
+    }
+    if ($across -lt $width -or $down -lt $lines.Count -or
+        ($across - $width) % 2 -or ($down - $lines.Count) % 2) {
+        return "the screenshot is $across by $down, and the test's picture $width by $($lines.Count)"
+    }
+    $left = ($across - $width) / 2
+    $top = ($down - $lines.Count) / 2
+    for ($y = 0; $y -lt $down; $y++) {
+        $inside = $y -ge $top -and $y -lt $top + $lines.Count
+        $at = $data + $y * $across * 4
+        for ($x = 0; $x -lt $across; $x++) {
+            $wanted = if ($inside -and $x -ge $left -and $x -lt $left + $width) { $lines[$y - $top] } else { $border }
+            # A pixel is blue, green, red and a byte of nothing
+            $got = (([int] $bytes[$at] -shr 3) -shl 10) -bor (([int] $bytes[$at + 1] -shr 3) -shl 5) -bor
+                ([int] $bytes[$at + 2] -shr 3)
+            if ($got -ne $wanted) {
+                return ("the screenshot's column $x of line $y is {0:x4}, and the test names {1:x4}" -f
+                    $got, $wanted)
+            }
+            $at += 4
+        }
+    }
+    return $null
+}
+
 function Test-Disc {
     param([string] $Test)
 
@@ -157,7 +229,8 @@ function Test-Disc {
             --mount "type=bind,source=$build,target=$($place.Build)" `
             --mount "type=bind,source=$biosPath,target=/bios.bin,readonly" `
             --workdir "$($place.Clone)/tests/$group/$name" `
-            $Image make "--jobs=$jobs" "HX_OUT=$($place.Build)" HX_BIOS=/bios.bin 2>&1
+            $Image make "--jobs=$jobs" "HX_OUT=$($place.Build)" HX_BIOS=/bios.bin `
+            "HX_TEST_REGION=$Region" 2>&1
         $failed = $LASTEXITCODE -ne 0
         $log | ForEach-Object { "$_" } | Add-Content -LiteralPath (Join-Path $folder "build.log")
         if ($failed) {
@@ -195,26 +268,32 @@ function Test-Disc {
     $address = [Convert]::ToUInt32($Matches[1], 16)
     $size = [Convert]::ToUInt32($Matches[2], 16)
 
-    $arguments = @(
+    # What every run of the disc is given. The test's folder of results is where a run writes
+    # its screenshot.
+    $run = @(
         "run", "--rm",
         "--mount", "type=bind,source=$runnerPath,target=/runner,readonly",
         "--mount", "type=bind,source=$first,target=/disc,readonly",
         "--mount", "type=bind,source=$biosPath,target=/bios.bin,readonly",
+        "--mount", "type=bind,source=$folder,target=/results",
         $RunnerImage, "/runner/beetle-runner",
         "--core", "/runner/mednafen_saturn_libretro.so",
         "--image", "/disc/$name.cue",
         "--bios", "/bios.bin",
-        "--region", $Region,
+        "--region", $Region
+    )
+    # The core's options the test names, one a line
+    foreach ($option in @(Get-Content -LiteralPath (Join-Path $first "$name.options") | Where-Object { $_ })) {
+        $run += @("--core-option", $option)
+    }
+
+    $arguments = $run + @(
         "--frames", $Frames,
         "--stop-address", ("0x{0:X8}" -f $address),
         "--stop-ascii", "HXREPORT"
     )
     for ($at = 0; $at -lt $size; $at += $captureSize) {
         $arguments += @("--capture", ("0x{0:X8}:{1}" -f ($address + $at), [Math]::Min($captureSize, $size - $at)))
-    }
-    # The core's options the test names, one a line
-    foreach ($option in @(Get-Content -LiteralPath (Join-Path $first "$name.options") | Where-Object { $_ })) {
-        $arguments += @("--core-option", $option)
     }
     $json = docker @arguments 2> (Join-Path $folder "log.txt")
     $exitCode = $LASTEXITCODE
@@ -227,8 +306,9 @@ function Test-Disc {
     }
 
     try {
-        $captures = (($json -join "") | ConvertFrom-Json).captures
-        $bytes = [Convert]::FromHexString((($captures | ForEach-Object { $_.data }) -join ""))
+        $result = ($json -join "") | ConvertFrom-Json
+        $stopped = [int] $result.framesExecuted
+        $bytes = [Convert]::FromHexString((($result.captures | ForEach-Object { $_.data }) -join ""))
     } catch {
         return "the runner's result is not to be read (result.json)"
     }
@@ -282,6 +362,29 @@ function Test-Disc {
     }
     if ($bad) {
         return "$($bad.Count) of $counted rows failed:`n" + (($bad | ForEach-Object { "    $_" }) -join "`n")
+    }
+
+    # The picture, for a test that names one. The disc is run again, with no stop, to the
+    # second frame past the one the report was found after, and that frame is the screenshot.
+    $screen = @(Get-Content -LiteralPath (Join-Path $first "$name.screen") | Where-Object { $_ })
+    if ($screen) {
+        if ($stopped -le 0) {
+            return "the runner's result has no count of frames (result.json)"
+        }
+        $frame = $stopped + 2
+        $arguments = $run + @("--frames", $frame, "--screenshot", "${frame}:/results/screen.bmp")
+        docker @arguments > (Join-Path $folder "screen.json") 2> (Join-Path $folder "screen-log.txt")
+        if ($LASTEXITCODE -ne 0) {
+            return "the runner failed with $LASTEXITCODE on the run for the screenshot (screen-log.txt)"
+        }
+        $shot = Join-Path $folder "screen.bmp"
+        if (-not (Test-Path -LiteralPath $shot)) {
+            return "the runner left no screenshot"
+        }
+        $unlike = Compare-Screen $shot $screen
+        if ($unlike) {
+            return "$unlike (screen.bmp)"
+        }
     }
     $script:rowsPassed = $counted
     return $null

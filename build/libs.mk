@@ -23,7 +23,7 @@ ifeq ($(strip $(HX_OUT)),)
 endif
 
 # In link order: a library ahead of the ones it uses
-HX_LIBRARIES:= hxmath hxrt
+HX_LIBRARIES:= 315 hxmath hxrt
 
 # The libraries that have references
 HX_REF_LIBRARIES:= hxmath
