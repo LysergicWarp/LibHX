@@ -53,7 +53,7 @@ The same header, in a `.sx` source:
 | [`<hx/hw/sh2/frt.h>`](../api/frt_8h.html) | The SH-2's free-running timer |
 | [`<hx/hw/sh2/divu.h>`](../api/divu_8h.html) | The SH-2's divide unit |
 | [`<hx/hw/315/scu.h>`](../api/scu_8h.html) | The SCU |
-| [`<hx/hw/315/vdp2.h>`](../api/hw_2include_2hx_2hw_2315_2vdp2_8h.html) | VDP2's memory and registers, with the bits of three of them |
+| [`<hx/hw/315/vdp2.h>`](../api/hw_2include_2hx_2hw_2315_2vdp2_8h.html) | VDP2's memory and registers, with the bits of some of them |
 
 `<hx/hw/sh2/...>` is for the SH-2's own modules and `<hx/hw/315/...>` for Sega's chips.
 

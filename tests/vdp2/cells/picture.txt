@@ -1,0 +1,24 @@
+# The picture of main.c: 40 by 28 cells of 8 by 8 dots over a back screen of 2108.
+#
+# Colours: 001f red, 03e0 green, 7c00 blue with palette 0, and 7fff white, 03ff yellow,
+# 7fe0 cyan with palette 1.
+#
+# The corner cell is a top line of red, a left column of green, the rest blue, and its last
+# dot transparent. With palette 1 they are white, yellow and cyan.
+
+# The top row of cells: the solid cell, the corner as it is, flipped across, flipped down,
+# flipped both ways and with palette 1, then nothing up to a solid cell of palette 1
+1 8:001f 8:001f 8:001f 1:03e0 6:7c00 1:2108 1:2108 6:7c00 1:03e0 8:7fff 264:2108 8:7fff
+6 8:001f 1:03e0 7:7c00 7:7c00 1:03e0 1:03e0 7:7c00 7:7c00 1:03e0 1:03ff 7:7fe0 264:2108 8:7fff
+1 8:001f 1:03e0 6:7c00 1:2108 1:2108 6:7c00 1:03e0 8:001f 8:001f 1:03ff 6:7fe0 1:2108 264:2108 8:7fff
+
+# The second row: a solid cell of palette 1 at the left
+8 8:7fff 312:2108
+
+# 25 rows of nothing
+200 320:2108
+
+# The last row: a solid cell at the left, the corner at the right
+1 8:001f 304:2108 8:001f
+6 8:001f 304:2108 1:03e0 7:7c00
+1 8:001f 304:2108 1:03e0 6:7c00 1:2108

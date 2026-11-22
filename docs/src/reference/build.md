@@ -58,8 +58,9 @@ It may set `HX_STACK`, `HX_STACK_SIZE`, `HX_CART_JOIN` and `HX_IP_FIRST_READ`, a
 | `HX_TEST_CFLAGS` | More for its C and its C++, as `-D` |
 | `HX_TEST_CORE_OPTIONS` | The options of the emulator's core its run needs, each as `<name>=<value>`: the cartridge in the slot, for one |
 | `HX_TEST_SCREEN_LINES` | The picture its run is to show, from the top: each `<lines>:<colour>` is that many lines of one colour. A colour is 4 hexadecimal digits, the 15 bits VDP2 has it in |
-| `HX_TEST_SCREEN_WIDTH` | The picture's width in pixels. Set with `HX_TEST_SCREEN_LINES` |
-| `HX_TEST_SCREEN_BORDER` | The colour around the picture. Set with `HX_TEST_SCREEN_LINES` |
+| `HX_TEST_SCREEN_PICTURE` | In place of `HX_TEST_SCREEN_LINES`, a file that holds the picture, for lines of more than one colour. A line of it is `<lines> <pixels>:<colour> ...`: that many lines of the picture, each those runs of pixels from the left, which add up to the width. A number is 1 to 9999. A `#` starts a comment |
+| `HX_TEST_SCREEN_WIDTH` | The picture's width in pixels. Set with either |
+| `HX_TEST_SCREEN_BORDER` | The colour around the picture. Set with either |
 
 make takes:
 
@@ -77,6 +78,6 @@ The build gives, by the test's folder name:
 | `HX_OUT/<folder>.elf` | The program |
 | `HX_OUT/<folder>.nm` | The program's symbols, each with its address and size |
 | `HX_OUT/<folder>.options` | The core's options, one a line |
-| `HX_OUT/<folder>.screen` | The picture: the width and the border's colour, then a line for each run of lines. No line when the test names no picture |
+| `HX_OUT/<folder>.screen` | The picture: the width and the border's colour, then lines as `HX_TEST_SCREEN_PICTURE`'s file has them. No line when the test names no picture |
 
 A test is C23 or C++23 at `-O2` with debug data and the SDK's warnings.

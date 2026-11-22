@@ -1,0 +1,23 @@
+# The picture of main.c: NBG3's four planes meet at the screen's middle, each a quarter of
+# the screen in its own colour, with NBG1's two cells in front.
+#
+# Colours: 001f red for plane A, 03e0 green for B, 7c00 blue for C, 7fff white for D, and
+# 021f orange for NBG1's cell.
+#
+# The character at each plane's corner by the middle is four cells: 03ff yellow at its top
+# left, 7fe0 cyan at its top right, 7c1f magenta at its bottom left, 4210 grey at its bottom
+# right. Plane A has it as it is, B flipped across, C flipped down, D flipped both ways.
+
+# Planes A and B, NBG1's cell at the top left
+8 8:021f 152:001f 160:03e0
+88 160:001f 160:03e0
+
+# The four characters around the middle, 8 lines for each row of their cells
+8 144:001f 8:03ff 8:7fe0 8:7fe0 8:03ff 144:03e0
+8 144:001f 8:7c1f 8:4210 8:4210 8:7c1f 144:03e0
+8 144:7c00 8:7c1f 8:4210 8:4210 8:7c1f 144:7fff
+8 144:7c00 8:03ff 8:7fe0 8:7fe0 8:03ff 144:7fff
+
+# Planes C and D, NBG1's cell at the bottom right
+88 160:7c00 160:7fff
+8 160:7c00 152:7fff 8:021f

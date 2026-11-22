@@ -65,6 +65,18 @@ include ../../../build/test.mk
 - The screenshot is taken after the report is there, so the program keeps its picture on
   screen past `hx_test_end`.
 
+A picture whose lines hold more than one colour goes in a file, which
+`HX_TEST_SCREEN_PICTURE` names in place of `HX_TEST_SCREEN_LINES`:
+
+```
+# A red square of 8 by 8 pixels at the top left of a blue screen
+8 8:001f 312:7c00
+216 320:7c00
+```
+
+- A line is a count of lines of the picture, then their runs of pixels from the left.
+- The pixels of a line add up to the width. The build stops on a line where they do not.
+
 ## See the report on a console
 
 A console has no script to read work RAM. `hx_test_show`, the last call of the test above,
@@ -113,6 +125,8 @@ pass startup/high-stack: 28 rows
 | `math/cxx` | The math headers from C++, linked against the archive |
 | `vdp2/back-color` | VDP2's start and screen mode, and the back screen in one colour with the border in it too |
 | `vdp2/back-lines` | The same with a colour for each line, and a black border |
+| `vdp2/cells` | NBG0 as tiles over the back screen: two palettes, the flips, a transparent dot, the screen's corners |
+| `vdp2/planes` | NBG3's four planes in tiles of 16 by 16 dots, 256 colours and pattern names of two words, with NBG1 in front |
 | `report/show` | `hx_test_show`'s picture: both colours, and the gap after a fifth row |
 | `report/show-all` | The same with as many rows as bands |
 | `report/show-more` | The same with more rows than bands, the rows without a band passing |

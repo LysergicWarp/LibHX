@@ -24,9 +24,10 @@
 # disc is run until the report's mark is in work RAM. A test passes when its report is whole
 # and every row in it passes.
 #
-# A test may name the picture its run is to show (HX_TEST_SCREEN_LINES, build/test.mk). Its
-# disc is then run again, with no stop, two frames past the one the report was found after.
-# That frame's screenshot has to be the picture, pixel for pixel.
+# A test may name the picture its run is to show (HX_TEST_SCREEN_LINES or
+# HX_TEST_SCREEN_PICTURE, build/test.mk). Its disc is then run again, with no stop, two frames
+# past the one the report was found after. That frame's screenshot has to be the picture, pixel
+# for pixel.
 #
 # In -Out: run.txt names the clone's commit, the toolchain image and its checksum, the runner's
 # image and the BIOS's checksum. A test's folder holds its two builds (first, second),
@@ -153,9 +154,10 @@ $jobs = [Environment]::ProcessorCount
 $markSize = 8
 $captureSize = 4096
 
-# The screenshot against the picture a test names: its width and the colour around it, then a
-# line for each run of lines. The picture sits in the screenshot's middle. A colour is compared
-# by the 5 bits of each of blue, green and red.
+# The screenshot against the picture a test names: its width and the colour around it, then
+# lines of a count of lines and their runs of pixels from the left, each <pixels>:<colour>. The
+# picture sits in the screenshot's middle. A colour is compared by the 5 bits of each of blue,
+# green and red.
 function Compare-Screen {
     param([string] $Path, [string[]] $Screen)
 
@@ -164,12 +166,25 @@ function Compare-Screen {
     }
     $width = [int] $Matches[1]
     $border = [Convert]::ToInt32($Matches[2], 16) -band 0x7FFF
-    $lines = @()
-    foreach ($run in $Screen | Select-Object -Skip 1) {
-        if ($run -cnotmatch '^(\d+) ([0-9a-f]{4})$') {
-            return "the test's picture holds a run that is no <lines>:<colour>: $run"
+    # A line of the picture is its pixels' colours. Lines that are the same share one list
+    $lines = [Collections.Generic.List[int[]]]::new()
+    foreach ($text in $Screen | Select-Object -Skip 1) {
+        if ($text -cnotmatch '^(\d+)((?: \d+:[0-9a-f]{4})+)$') {
+            return "the test's picture holds a line that is no count of lines and runs of <pixels>:<colour>: $text"
         }
-        $lines += @([Convert]::ToInt32($Matches[2], 16) -band 0x7FFF) * [int] $Matches[1]
+        $count = [int] $Matches[1]
+        $pixels = [Collections.Generic.List[int]]::new()
+        foreach ($run in $Matches[2].Trim().Split(" ")) {
+            $length, $color = $run.Split(":")
+            $pixels.AddRange([int[]] (@([Convert]::ToInt32($color, 16) -band 0x7FFF) * [int] $length))
+        }
+        if ($pixels.Count -ne $width) {
+            return "the test's picture holds a line of $($pixels.Count) pixels, and its width is ${width}: $text"
+        }
+        $line = $pixels.ToArray()
+        for ($same = 0; $same -lt $count; $same++) {
+            $lines.Add($line)
+        }
     }
 
     $bytes = [IO.File]::ReadAllBytes($Path)
@@ -196,7 +211,7 @@ function Compare-Screen {
         $inside = $y -ge $top -and $y -lt $top + $lines.Count
         $at = $data + $y * $across * 4
         for ($x = 0; $x -lt $across; $x++) {
-            $wanted = if ($inside -and $x -ge $left -and $x -lt $left + $width) { $lines[$y - $top] } else { $border }
+            $wanted = if ($inside -and $x -ge $left -and $x -lt $left + $width) { $lines[$y - $top][$x - $left] } else { $border }
             # A pixel is blue, green, red and a byte of nothing
             $got = (([int] $bytes[$at] -shr 3) -shl 10) -bor (([int] $bytes[$at + 1] -shr 3) -shl 5) -bor
                 ([int] $bytes[$at + 2] -shr 3)

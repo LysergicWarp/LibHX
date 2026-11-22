@@ -13,7 +13,8 @@
  * Two reads do something: one of EXTEN latches the counters while its EXLTEN is 0, and one of
  * TVSTAT clears its EXLTFG and EXSYFG.
  *
- * The bits are named for TVMD, TVSTAT and BKTAU alone. */
+ * The bits are named for TVMD, TVSTAT, BGON, CHCTLA, CHCTLB, the pattern name control registers
+ * and BKTAU alone. */
 
 /* VRAM, 512 kbytes, and the colour RAM, 4 kbytes */
 #define VDP2_VRAM 0x25E00000
@@ -220,6 +221,52 @@
 #define VDP2_TVSTAT_HBLANK 0x0004
 #define VDP2_TVSTAT_ODD 0x0002
 #define VDP2_TVSTAT_PAL 0x0001
+
+/* A screen shown: NBG0 to NBG3, RBG0, RBG1. Then a screen whose dots of colour 0 show too, where
+ * 0 leaves them transparent: NBG0 to NBG3, RBG0 */
+#define VDP2_BGON_N0ON 0x0001
+#define VDP2_BGON_N1ON 0x0002
+#define VDP2_BGON_N2ON 0x0004
+#define VDP2_BGON_N3ON 0x0008
+#define VDP2_BGON_R0ON 0x0010
+#define VDP2_BGON_R1ON 0x0020
+#define VDP2_BGON_N0TPON 0x0100
+#define VDP2_BGON_N1TPON 0x0200
+#define VDP2_BGON_N2TPON 0x0400
+#define VDP2_BGON_N3TPON 0x0800
+#define VDP2_BGON_R0TPON 0x1000
+
+/* Of NBG0, then of NBG1: characters of four cells where 0 is one, the bitmap format where 0 is
+ * the cell format, the bitmap's size, the colours */
+#define VDP2_CHCTLA_N0CHSZ 0x0001
+#define VDP2_CHCTLA_N0BMEN 0x0002
+#define VDP2_CHCTLA_N0BMSZ 0x000C
+#define VDP2_CHCTLA_N0CHCN 0x0070
+#define VDP2_CHCTLA_N1CHSZ 0x0100
+#define VDP2_CHCTLA_N1BMEN 0x0200
+#define VDP2_CHCTLA_N1BMSZ 0x0C00
+#define VDP2_CHCTLA_N1CHCN 0x3000
+
+/* Of NBG2, of NBG3, then of RBG0: the same fields, NBG2 and NBG3 without a bitmap format */
+#define VDP2_CHCTLB_N2CHSZ 0x0001
+#define VDP2_CHCTLB_N2CHCN 0x0002
+#define VDP2_CHCTLB_N3CHSZ 0x0010
+#define VDP2_CHCTLB_N3CHCN 0x0020
+#define VDP2_CHCTLB_R0CHSZ 0x0100
+#define VDP2_CHCTLB_R0BMEN 0x0200
+#define VDP2_CHCTLB_R0BMSZ 0x0400
+#define VDP2_CHCTLB_R0CHCN 0x7000
+
+/* PNCN0 to PNCN3 and PNCR alike: pattern names of one word where 0 is two, a character number
+ * of 12 bits in such a word where 0 is 10 bits and the two flips, then what a word lacks: the
+ * special priority bit, the special colour calculation bit, the top 3 bits of the palette
+ * number, 5 bits of the character number */
+#define VDP2_PNCN_PNB 0x8000
+#define VDP2_PNCN_CNSM 0x4000
+#define VDP2_PNCN_SPR 0x0200
+#define VDP2_PNCN_SCC 0x0100
+#define VDP2_PNCN_SPLT 0x00E0
+#define VDP2_PNCN_SCN 0x001F
 
 /* A colour for each line where 0 is one for the screen, and the top 3 bits of the back screen
  * table's address, which counts words of VRAM */

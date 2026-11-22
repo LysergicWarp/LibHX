@@ -62,8 +62,8 @@ The first run ends at the frame the report is found after. The second has no sto
 two frames further, and that last frame is the screenshot.
 
 - The picture sits in the screenshot's middle. The pixels around it are the border.
-- Every pixel is compared, the picture's with its line's colour and the others with the
-  border's.
+- Every pixel is compared, the picture's with the colour the test names for it and the
+  others with the border's.
 - A colour is compared by 5 bits each of red, green and blue, as VDP2 has it.
 - A picture in its border's colour does not show its size: any screenshot that large or
   larger in the one colour passes.

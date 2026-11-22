@@ -2,7 +2,7 @@
 
 hx is a Sega Saturn SDK in C, with SH-2 assembly on its hot paths. It is in early development.
 The math library, the runtime's startup with the RAM cartridge, the C library's memory
-functions, and VDP2's start with its back screen are the code so far.
+functions, and VDP2's start with its back screen and tile screens are the code so far.
 
 ## Libraries
 
