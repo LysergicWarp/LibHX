@@ -1,0 +1,71 @@
+# Test discs
+
+A test is a disc: a program that leaves a report in work RAM, a row for each thing it checks.
+`tools/hx-test.ps1` builds each test, runs it on Beetle Saturn and reads the report.
+
+## Write a test
+
+A test is a folder `<library>/test/<name>` of the clone. Its `main.c`:
+
+```c
+#include <stdint.h>
+
+#include <hx/math.h>
+#include <hx/test.h>
+
+int
+main(void)
+{
+        hx_test_equal("mul", (uint32_t)hx_mul(HX_FIX16(3), HX_FIX16(0.5)), HX_FIX16(1.5));
+        hx_test_equal("sin", (uint32_t)hx_sin(HX_DEG(90)), HX_FIX14(1));
+        hx_test_end();
+        return 0;
+}
+```
+
+- `hx_test_equal` adds a row, which passes when the two numbers are the same.
+- `hx_test_end` closes the report.
+
+Its `Makefile`:
+
+```make
+HX_SOURCES:= main.c
+include ../../../build/test.mk
+```
+
+## Run the tests
+
+```
+pwsh tools/hx-test.ps1 -Runner <folder> -RunnerImage <image> -Bios <file>
+```
+
+With no test named, every test runs. A test is named as `<library>/<name>`:
+
+```
+pwsh tools/hx-test.ps1 -Runner <folder> -RunnerImage <image> -Bios <file> libhxrt/start
+```
+
+```
+pass libhxrt/start: 27 rows
+1 tests passed. Results in <clone>/out
+```
+
+> [!NOTE]
+> The script runs the emulator through a program that drives a libretro core without a window.
+> That program is not part of the SDK. [The test flow](../in-depth/tests.md#the-runner) says what
+> the script asks of one.
+
+## The tests so far
+
+| Test | Checks |
+| --- | --- |
+| `libhxrt/start` | What `main` finds, with the stack at the top of Work RAM-H |
+| `libhxrt/start-low-stack` | The same with the stack below the program |
+| `libhxmath/cxx` | The math headers from C++, linked against the archive |
+
+## More detail
+
+- API: [`<hx/test.h>`](../api/test_8h.html).
+- [Scripts](../reference/scripts.md#hx-testps1): every option of `hx-test.ps1`.
+- [Build settings](../reference/build.md#testmk): the settings of a test's Makefile.
+- [The test flow](../in-depth/tests.md): the report's text, the two builds, the results folder.

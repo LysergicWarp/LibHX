@@ -14,13 +14,19 @@ Each library depends only on those below it. `libhx2d` and `libhxio` sit side by
 | `libhx2d` | 2D helpers: sprites, tile maps, fonts | Planned |
 | `libhxio` | Files on disc, loading and decompression | Planned |
 | `lib315` | Drivers for Sega's chips: VDP1, VDP2, SCU, SMPC, sound, CD block, MPEG card | Planned |
-| `libhxrt` | Runtime: startup, interrupts, DMA, memory, the second SH-2, the C library | In progress |
-| `libhxmath` | Fixed point, trig, vectors, matrices | In progress |
+| [`libhxrt`](guides/memory.md) | Runtime: startup, interrupts, DMA, memory, the second SH-2, the C library | In progress |
+| [`libhxmath`](guides/math.md) | Fixed point, trig, vectors, matrices | In progress |
 
-The register maps the libraries share are headers with no archive, under `hw/`:
-`<hx/hw/sh2/...>` for the SH-2's own modules and `<hx/hw/315/...>` for Sega's chips.
+The [register maps](guides/registers.md) the libraries share are headers with no archive, under
+`hw/`.
 
-## Where to start
+## How these pages are laid out
 
-- [Setting up](guides/setup.md): the toolchain image, and the script that runs make in it.
-- [API reference](reference.md): the public headers, generated from their comments.
+- Getting started: from a clone to a disc image, in three pages. Begin with
+  [Setting up](start/setup.md).
+- Guides: one topic a page, code first.
+- Reference: the [switches](reference/switches.md) a program may toggle, every setting and
+  option, and the [API](reference/api.md).
+- In depth: how the SDK works underneath. No guide needs it read first.
+
+A guide ends with links to its reference and in-depth pages.
