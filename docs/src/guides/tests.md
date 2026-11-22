@@ -20,12 +20,14 @@ main(void)
         hx_test_equal("mul", (uint32_t)hx_mul(HX_FIX16(3), HX_FIX16(0.5)), HX_FIX16(1.5));
         hx_test_equal("sin", (uint32_t)hx_sin(HX_DEG(90)), HX_FIX14(1));
         hx_test_end();
+        hx_test_show();
         return 0;
 }
 ```
 
 - `hx_test_equal` adds a row, which passes when the two numbers are the same.
 - `hx_test_end` closes the report.
+- `hx_test_show` puts the rows on screen, for [a run on a console](#see-the-report-on-a-console).
 
 Its `Makefile`:
 
@@ -63,6 +65,18 @@ include ../../../build/test.mk
 - The screenshot is taken after the report is there, so the program keeps its picture on
   screen past `hx_test_end`.
 
+## See the report on a console
+
+A console has no script to read work RAM. `hx_test_show`, the last call of the test above,
+puts the report's rows on screen, a band of colour for each.
+
+- A green band is a row that passes, a red one a row that fails. The first row is at the top.
+- Three black lines follow every fifth band, for counting.
+- The picture holds 40 rows. With more, one more band at the bottom says so: white when the
+  rows without a band all pass, red when one fails.
+- A program that does not reach the call shows no bands.
+- The call takes VDP2 as its own. A test that checks a picture of its own does without it.
+
 ## Run the tests
 
 ```
@@ -99,11 +113,20 @@ pass startup/high-stack: 28 rows
 | `math/cxx` | The math headers from C++, linked against the archive |
 | `vdp2/back-color` | VDP2's start and screen mode, and the back screen in one colour with the border in it too |
 | `vdp2/back-lines` | The same with a colour for each line, and a black border |
+| `report/show` | `hx_test_show`'s picture: both colours, and the gap after a fifth row |
+| `report/show-all` | The same with as many rows as bands |
+| `report/show-more` | The same with more rows than bands, the rows without a band passing |
+| `report/show-more-failed` | The same with a row without a band failing |
+| `report/show-full` | The same with a full report |
+| `report/show-own` | The same with the test's own rows, after `hx_test_end` |
+
+Every test but the `vdp2` and `report` ones ends with `hx_test_show`, so its disc shows its
+report on a console.
 
 ## More detail
 
 - API: [`<hx/test.h>`](../api/test_8h.html).
 - [Scripts](../reference/scripts.md#hx-testps1): every option of `hx-test.ps1`.
 - [Build settings](../reference/build.md#testmk): the settings of a test's Makefile.
-- [The test flow](../in-depth/tests.md): the report's text, the two builds, the screenshot,
-  the results folder.
+- [The test flow](../in-depth/tests.md): the report's text, the bands' places on screen, the
+  two builds, the screenshot, the results folder.

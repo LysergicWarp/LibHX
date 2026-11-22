@@ -20,6 +20,28 @@ end <rows> <failed>
 - A mark, `HXREPORT`, sits ahead of the text. It is written last, so a report that is there is
   whole.
 
+## The report on screen
+
+`hx_test_show` draws the rows with VDP2's back screen alone, a colour for each line, so it
+needs no font and no scroll screen. The screen is 320 by 224 with a black border.
+
+| Lines | What |
+| --- | --- |
+| 0 to 1 | Black |
+| 2 to 217 | The first 40 rows: a band of 4 lines each, a black line between two, 3 black lines after every fifth |
+| 218 to 221 | The band for more rows, black when there are none |
+| 222 to 223 | Black |
+
+- Row `n`, counted from 0, starts at line `2 + 5 * n + 2 * (n / 5)`, the division whole.
+- The rows are read from the report's text: a line that starts with `pass` or `FAIL`. So the
+  call shows the rows so far at any time, ahead of `hx_test_end` too.
+- A report with the line `full` has the band for more rows in red: rows are missing from it.
+- The table of colours is the first 448 bytes of VRAM.
+
+The `report` tests write a text into the report by hand, show it, take it out again, and
+then leave rows of their own. `report/show-own` shows its own rows. The script compares the
+picture as it does any other.
+
 ## What the script does
 
 1. Builds the test from nothing, twice, for the region it will run in. The clone and the

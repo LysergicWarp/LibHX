@@ -51,5 +51,6 @@ main()
             static_cast<uint32_t>(identity.translation.z), 0);
 
         hx_test_end();
+        hx_test_show();
         return 0;
 }

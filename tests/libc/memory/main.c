@@ -450,5 +450,6 @@ main(void)
         hx_test_equal("macro.memcmp.differs", memcmp(to_block, wanted_block, BLOCK) < 0, 1);
 
         hx_test_end();
+        hx_test_show();
         return 0;
 }

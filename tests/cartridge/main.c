@@ -3,6 +3,7 @@
 #include <hx/cart.h>
 #include <hx/hw/sh2/cache.h>
 #include <hx/test.h>
+#include <hx/vdp2.h>
 
 /* What startup found in the cartridge slot, against what the run puts there.
  *
@@ -36,9 +37,6 @@ static const struct run expect_runs[2] = { { 0x02400000, 0x400000 }, { 0, 0 } };
 #define EXPECT_RUN_COUNT 0
 static const struct run expect_runs[2] = { { 0, 0 }, { 0, 0 } };
 #endif
-
-/* The report itself, for the mark */
-extern volatile char hx_test_report[HX_TEST_REPORT_SIZE];
 
 /* What each run's longs are written with, a value for each long */
 static const uint32_t seeds[2] = { 0xC0DE0000, 0x1BAD0000 };
@@ -91,6 +89,8 @@ too_small(const hx_cart_t *found, void *context)
         hx_test_equal("require.less.calls", calls, 1);
         hx_test_equal("require.less.found", found == hx_cart_found(), 1);
         hx_test_equal("require.less.context", context == &context_of_the_call, 1);
+        /* The picture ahead of the mark, so the mark is no sooner there than it has to be */
+        hx_test_show();
         hx_test_end();
 }
 
@@ -136,8 +136,9 @@ main(void)
         hx_cart_require(found->size + 1, too_small, &context_of_the_call);
 
         /* Reached only when the call returned. The report loses its mark within the frame, and
-         * the run looks for it after each frame, so it finds none */
+         * the run looks for it after each frame, so it finds none. The screen loses its bands */
         hx_test_report[0] = 0;
+        vdp2_start();
         for (;;) {
         }
 }

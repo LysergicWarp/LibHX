@@ -180,5 +180,6 @@ main(void)
         hx_test_equal("divide.unsigned.remainder", unsigned_dividend % unsigned_divisor, 5);
 
         hx_test_end();
+        hx_test_show();
         return 0;
 }
