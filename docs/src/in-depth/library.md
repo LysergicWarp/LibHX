@@ -13,6 +13,9 @@ How a library's folder is laid out and built, with libhxmath as the example.
 
 Hot paths are SH-2 assembly behind a C API.
 
+libhxrt's `include/` also holds the C library's headers, under their standard names
+(`string.h`).
+
 ## Headers
 
 libhxmath's public headers depend on `stdint.h`, `stddef.h` and the divide unit's

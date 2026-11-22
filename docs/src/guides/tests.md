@@ -61,6 +61,7 @@ pass libhxrt/start: 27 rows
 | --- | --- |
 | `libhxrt/start` | What `main` finds, with the stack at the top of Work RAM-H |
 | `libhxrt/start-low-stack` | The same with the stack below the program |
+| `libhxrt/memory` | `memcpy`, `memmove`, `memset` and `memcmp`, at every length up to 72 bytes and every alignment |
 | `libhxmath/cxx` | The math headers from C++, linked against the archive |
 
 ## More detail

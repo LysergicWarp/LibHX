@@ -3,6 +3,10 @@
 include ../build/flags.mk
 
 HX_LIB_SOURCES:= \
+	memcmp.c \
+	memcpy.c \
+	memmove.c \
+	memset.c \
 	start.sx
 
 # The library's headers and the register maps

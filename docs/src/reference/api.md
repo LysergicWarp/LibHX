@@ -9,6 +9,6 @@ shows on its page here.
 | Library | Headers |
 | --- | --- |
 | libhxmath | [`math.h`](../api/math_8h.html), [`types.h`](../api/types_8h.html), [`fix16.h`](../api/fix16_8h.html), [`trig.h`](../api/trig_8h.html), [`vec2.h`](../api/vec2_8h.html), [`vec3.h`](../api/vec3_8h.html), [`mat.h`](../api/mat_8h.html) |
-| libhxrt | [`start.h`](../api/start_8h.html) |
+| libhxrt | [`start.h`](../api/start_8h.html), [`string.h`](../api/string_8h.html) |
 | libhxtest | [`test.h`](../api/test_8h.html) |
 | Register maps | [`map.h`](../api/map_8h.html), [`cache.h`](../api/cache_8h.html), [`frt.h`](../api/frt_8h.html), [`divu.h`](../api/divu_8h.html), [`scu.h`](../api/scu_8h.html), [`vdp2.h`](../api/vdp2_8h.html) |

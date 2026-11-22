@@ -18,11 +18,15 @@ Every object, the SDK's and the program's, is compiled with these:
 | Flag | Why |
 | --- | --- |
 | `-m2 -mb` | The SH-2, big-endian |
-| `-ffreestanding` | No C library |
+| `-ffreestanding` | The compiler assumes no C library |
 | `-ffunction-sections -fdata-sections` | A section for each function and object, so a link drops what a program does not use |
 | `-fno-delete-null-pointer-checks` | Address 0 is the BIOS ROM and reads without a fault, so an access through a pointer does not prove it non-null |
 
 The calling convention is GCC's default.
+
+With `-ffreestanding` the compiler expands no call of a C library function in place.
+`<string.h>` names its functions as macros on the compiler's builtins as well, so a `memset` of
+a small fixed size is still a few instructions and no call.
 
 A program's C++ is built without exceptions and run-time type information. The first use of a
 local static object takes no lock, and a destructor of a static object is not handed to a C++
@@ -53,6 +57,8 @@ HX_PROGRAM_CFLAGS= -std=c23 -O2 $(HX_WARNINGS) $(HX_C_WARNINGS)
 - The linker script places every section. One it does not name stops the link.
 - What nothing reaches from startup is dropped.
 - libgcc is the compiler's own, for what the compiler calls.
+- The compiler calls `memcpy` and `memset` too, for an object copied or zeroed. Those are
+  libhxrt's.
 - The linker's warnings stop the link.
 
 ## Settings are symbols

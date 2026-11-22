@@ -1,7 +1,7 @@
 # Startup and memory
 
 libhxrt's startup runs between the BIOS and `main`. A program is linked into Work RAM-H, and
-single objects go to Work RAM-L by name.
+single objects go to Work RAM-L by name. `<string.h>` copies and fills memory.
 
 ## What main finds
 
@@ -55,10 +55,55 @@ HX_STACK:= low
 const uintptr_t size = (uintptr_t)hx_stack_end - (uintptr_t)hx_stack_start;
 ```
 
+## Copying and filling
+
+`<string.h>` has the C library's four memory functions:
+
+```c
+#include <stdint.h>
+#include <string.h>
+
+struct player {
+        char name[8];
+        uint32_t score;
+};
+
+static struct player players[4];
+static struct player best;
+
+int
+main(void)
+{
+        memset(players, 0, sizeof players);
+        memcpy(players[0].name, "SATURN", 7);
+        players[0].score = 9000;
+
+        memcpy(&best, &players[0], sizeof best);
+        memmove(&players[1], &players[0], 3 * sizeof players[0]);
+
+        if (memcmp(&best, &players[1], sizeof best) != 0) {
+                return 1;
+        }
+
+        for (;;) {
+        }
+}
+```
+
+- `memcpy` copies between two blocks that do not overlap, and `memmove` between two that may.
+- `memset` fills a block with one byte, and `memcmp` compares two blocks.
+- They are for memory. A hardware register is written through its [map](registers.md).
+
+> [!NOTE]
+> The rest of the C library is not there yet.
+
 ## More detail
 
-- API: [`<hx/start.h>`](../api/start_8h.html).
+- API: [`<hx/start.h>`](../api/start_8h.html), and [`<string.h>`](../api/string_8h.html) for
+  what the memory functions say past the C standard.
 - [Switches](../reference/switches.md): `HX_STACK` and `HX_STACK_SIZE`.
 - [Build settings](../reference/build.md#programmk): the load address.
 - [Startup and the linker script](../in-depth/startup.md): each step of startup, where every
   section goes, what lies under the low stack.
+- [The build](../in-depth/build.md): the calls of `memcpy` and `memset` the compiler makes on
+  its own, and when a call by name is expanded in place.
