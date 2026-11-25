@@ -65,9 +65,27 @@ HX_PROGRAM_CFLAGS= -std=c23 -O2 $(HX_WARNINGS) $(HX_C_WARNINGS)
 
 A choice the SDK leaves to the program is a setting in its Makefile. It reaches the link as a
 symbol, so the libraries are the same archives whatever a program picks. `HX_STACK`,
-`HX_STACK_SIZE` and `HX_IP_FIRST_READ` are the ones so far.
+`HX_STACK_SIZE`, `HX_CART_JOIN` and `HX_IP_FIRST_READ` are the ones so far. `HX_FONT` reaches
+the link as an object, [below](#the-fonts).
 
 [Switches](../reference/switches.md) lists what a program may toggle.
+
+## The fonts
+
+The SDK's fonts are in `fonts/`, in no library. They build with the program as the libraries
+do, into two things:
+
+| File | What |
+| --- | --- |
+| `HX_OUT/fonts.a` | An archive, a member a font |
+| `HX_OUT/fonts/primary-<font>.o` | For each font, an object that defines `hx_font` as that font |
+
+- The link takes the one object `HX_FONT` names, then the archive. So the fonts are the same
+  files whatever a program picks, as the libraries are.
+- That object's definition of `hx_font` is an ordinary one. A second definition, in the
+  program, stops the link.
+- What nothing reaches is dropped, as everywhere: a program that uses no text call holds no
+  font, and a font that is not named holds no bytes.
 
 ## What is built anew
 
@@ -99,5 +117,6 @@ packages by a snapshot's date, the sources by checksum.
 
 ## Another runtime
 
-A program that does not use `program.mk` includes `build/libs.mk` alone, for the include paths
-and the archives. [Build settings](../reference/build.md#libsmk) lists what it gives.
+A program that does not use `program.mk` includes `build/libs.mk` alone, for the include paths,
+the archives and the primary font's object. [Build settings](../reference/build.md#libsmk)
+lists what it gives.

@@ -8,19 +8,25 @@ GENERATE_LATEX        = NO
 QUIET                 = YES
 
 INPUT                 = ../hw/include \
+                        ../fonts/include \
                         ../lib315/include \
+                        ../libhx2d/include \
                         ../libhxmath/include \
                         ../libhxrt/include \
                         ../libhxtest/include
 FILE_PATTERNS         = *.h
 RECURSIVE             = YES
 STRIP_FROM_PATH       = ../hw/include \
+                        ../fonts/include \
                         ../lib315/include \
+                        ../libhx2d/include \
                         ../libhxmath/include \
                         ../libhxrt/include \
                         ../libhxtest/include
 STRIP_FROM_INC_PATH   = ../hw/include \
+                        ../fonts/include \
                         ../lib315/include \
+                        ../libhx2d/include \
                         ../libhxmath/include \
                         ../libhxrt/include \
                         ../libhxtest/include

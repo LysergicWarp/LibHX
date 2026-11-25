@@ -2,7 +2,8 @@
 
 hx is a Sega Saturn SDK in C, with SH-2 assembly on its hot paths. It is in early development.
 The math library, the runtime's startup with the RAM cartridge, the C library's memory
-functions, and VDP2's start with its back screen and tile screens are the code so far.
+functions, VDP2's start with its back screen and tile screens, and text on a tile screen are
+the code so far.
 
 ## Libraries
 
@@ -12,14 +13,14 @@ Each library depends only on those below it. `libhx2d` and `libhxio` sit side by
 | Library | Contents | State |
 | --- | --- | --- |
 | `libhx3d` | 3D pipeline | Planned |
-| `libhx2d` | 2D helpers: sprites, tile maps, fonts | Planned |
+| [`libhx2d`](guides/text.md) | 2D helpers: sprites, tile maps, text | In progress |
 | `libhxio` | Files on disc, loading and decompression | Planned |
 | [`lib315`](guides/vdp2.md) | Drivers for Sega's chips: VDP1, VDP2, SCU, SMPC, sound, CD block, MPEG card | In progress |
 | [`libhxrt`](guides/memory.md) | Runtime: startup, interrupts, DMA, memory, the second SH-2, the C library | In progress |
 | [`libhxmath`](guides/math.md) | Fixed point, trig, vectors, matrices | In progress |
 
 The [register maps](guides/registers.md) the libraries share are headers with no archive, under
-`hw/`.
+`hw/`. The SDK's [fonts](guides/text.md#the-primary-font) are under `fonts/`, in no library.
 
 ## How these pages are laid out
 

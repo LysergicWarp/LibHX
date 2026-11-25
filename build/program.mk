@@ -31,6 +31,11 @@
 #                      program finds two runs on the others. 0 when it is not set.
 #   HX_IP_FIRST_READ   the address the BIOS loads the program to, as disc.mk has it
 #
+# And the primary font, which the link takes as an object of the SDK's (libs.mk):
+#   HX_FONT            the font that hx_font is, one of the SDK's by its name. unscii8 when it
+#                      is not set. A font of the program's own is one of its sources, and
+#                      takes no setting.
+#
 # The SDK fixes the SH-2, GCC's default calling convention, a section for each function and
 # object, and no C library (HX_FIXED, fixed.mk). C++ is built without exceptions and run-time
 # type information. The first use of a local static object takes no lock, and a destructor of
@@ -77,7 +82,7 @@ endif
 # What the objects are made with, and what the link is, beside the files themselves
 HX_PROGRAM_FLAGS:= HX_CC HX_CXX HX_PROGRAM_CFLAGS HX_PROGRAM_CXXFLAGS HX_PROGRAM_ASFLAGS
 HX_PROGRAM_SETTINGS:= HX_SOURCES HX_STACK HX_STACK_SIZE HX_CART_JOIN HX_IP_FIRST_READ \
-    HX_PROGRAM_ARCHIVES HX_OBJCOPY
+    HX_FONT HX_PROGRAM_ARCHIVES HX_OBJCOPY
 
 # A value reaches the shell between single quotes
 $(foreach name,$(HX_PROGRAM_FLAGS) $(HX_PROGRAM_SETTINGS) HX_ROOT HX_OUT HX_PROGRAM HX_SOURCES, \

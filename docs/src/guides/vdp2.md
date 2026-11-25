@@ -173,4 +173,5 @@ program decides it.
 ## More detail
 
 - API: [`<hx/vdp2.h>`](../api/lib315_2include_2hx_2vdp2_8h.html).
+- [Text](text.md): a font's glyphs as tiles.
 - [Register maps](registers.md): `<hx/hw/315/vdp2.h>`, the chip's registers and memory.

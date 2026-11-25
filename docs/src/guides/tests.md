@@ -127,6 +127,8 @@ pass startup/high-stack: 28 rows
 | `vdp2/back-lines` | The same with a colour for each line, and a black border |
 | `vdp2/cells` | NBG0 as tiles over the back screen: two palettes, the flips, a transparent dot, the screen's corners |
 | `vdp2/planes` | NBG3's four planes in tiles of 16 by 16 dots, 256 colours and pattern names of two words, with NBG1 in front |
+| `text/primary` | The text calls with the primary font: every glyph, a string, numbers, a code the font does not hold, and places past the page's edges |
+| `text/own-font` | A font of the test's own, one of its sources, as cells, a string and hexadecimal digits, with pattern names of two words |
 | `report/show` | `hx_test_show`'s picture: both colours, and the gap after a fifth row |
 | `report/show-all` | The same with as many rows as bands |
 | `report/show-more` | The same with more rows than bands, the rows without a band passing |
@@ -134,8 +136,8 @@ pass startup/high-stack: 28 rows
 | `report/show-full` | The same with a full report |
 | `report/show-own` | The same with the test's own rows, after `hx_test_end` |
 
-Every test but the `vdp2` and `report` ones ends with `hx_test_show`, so its disc shows its
-report on a console.
+Every test but the `vdp2`, `text` and `report` ones ends with `hx_test_show`, so its disc
+shows its report on a console.
 
 ## More detail
 

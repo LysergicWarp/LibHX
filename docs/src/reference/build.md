@@ -30,19 +30,20 @@ It may set:
 | `HX_IP_FIRST_READ` | The address the BIOS loads the program to, as `disc.mk` has it. `0x06004000` when it is not set |
 | `HX_CC`, `HX_CXX`, `HX_AR`, `HX_OBJCOPY` | The SH-2 tools, when they are not the ones on the path (`sh2eb-elf-gcc` and the rest) |
 
-And the [switches](switches.md): `HX_STACK`, `HX_STACK_SIZE` and `HX_CART_JOIN`.
+And the [switches](switches.md): `HX_STACK`, `HX_STACK_SIZE`, `HX_CART_JOIN` and `HX_FONT`.
 
 ## libs.mk
 
 Builds the SDK's libraries alone, for a program on another runtime. `program.mk` includes it.
 
-The program sets `HX_ROOT` and `HX_OUT`, and may set `HX_CC` and `HX_AR`. It gets:
+The program sets `HX_ROOT` and `HX_OUT`, and may set `HX_CC`, `HX_AR` and
+[`HX_FONT`](switches.md#hx_font). It gets:
 
 | Name | What |
 | --- | --- |
 | `HX_CPPFLAGS` | The include paths of the SDK's headers |
-| `HX_ARCHIVES` | The archives, for its link to depend on |
-| `HX_LDLIBS` | The archives as the linker takes them, in link order |
+| `HX_ARCHIVES` | The archives and the primary font's object, for its link to depend on |
+| `HX_LDLIBS` | The same as the linker takes them, in link order |
 | `HX_REF_CPPFLAGS`, `HX_REF_ARCHIVES`, `HX_REF_LDLIBS` | The same for libhxmath's references, each ahead of its counterpart above |
 | `HX_TEST_CPPFLAGS`, `HX_TEST_ARCHIVES` | The same for a test disc's report |
 
@@ -51,7 +52,7 @@ The program sets `HX_ROOT` and `HX_OUT`, and may set `HX_CC` and `HX_AR`. It get
 A [test disc](../guides/tests.md): `program.mk` and `disc.mk` with their settings filled in. A
 test's Makefile sets `HX_SOURCES` and includes it by its path from the test's folder.
 
-It may set `HX_STACK`, `HX_STACK_SIZE`, `HX_CART_JOIN` and `HX_IP_FIRST_READ`, and:
+It may set `HX_STACK`, `HX_STACK_SIZE`, `HX_CART_JOIN`, `HX_FONT` and `HX_IP_FIRST_READ`, and:
 
 | Setting | What |
 | --- | --- |

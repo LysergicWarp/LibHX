@@ -1,0 +1,41 @@
+# The picture of main.c: 40 by 28 characters of the test's own font over a back screen of
+# 2108.
+#
+# The font's four glyphs: A is every dot, B the left half, C the top half, D a frame one dot
+# wide. D is the glyph for a code the font does not hold.
+#
+# Colours: 001f red, and 7fff white on 7c00 blue.
+
+8 320:2108
+
+# Row 1, from column 1: A, B, C, D
+1 8:2108 12:001f 4:2108 16:001f 280:2108
+3 8:2108 12:001f 4:2108 9:001f 6:2108 1:001f 280:2108
+3 8:2108 12:001f 12:2108 1:001f 6:2108 1:001f 280:2108
+1 8:2108 12:001f 12:2108 8:001f 280:2108
+
+8 320:2108
+
+# Row 3: two codes the font does not hold, then A
+1 8:2108 24:001f 288:2108
+6 8:2108 1:001f 6:2108 2:001f 6:2108 9:001f 288:2108
+1 8:2108 24:001f 288:2108
+
+8 320:2108
+
+# Row 5: the hexadecimal digits D, C, B, A
+1 8:2108 20:001f 4:2108 8:001f 280:2108
+3 8:2108 1:001f 6:2108 13:001f 4:2108 8:001f 280:2108
+3 8:2108 1:001f 6:2108 1:001f 8:2108 4:001f 4:2108 8:001f 280:2108
+1 8:2108 8:001f 8:2108 4:001f 4:2108 8:001f 280:2108
+
+8 320:2108
+
+# Row 7: C and D in white on blue
+1 8:2108 16:7fff 296:2108
+3 8:2108 9:7fff 6:7c00 1:7fff 296:2108
+3 8:2108 8:7c00 1:7fff 6:7c00 1:7fff 296:2108
+1 8:2108 8:7c00 8:7fff 296:2108
+
+# 20 rows of nothing
+160 320:2108
