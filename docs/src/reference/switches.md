@@ -13,6 +13,8 @@ Every choice of speed or behaviour the SDK leaves to the program.
 - A switch in the Makefile is set ahead of the include of `build/program.mk`.
 - The SDK's libraries are the same archives whatever a program picks.
 - No switch is a call yet.
+- A function's `_round` or `_fast` form is not a switch. It is picked a call at a time, by its
+  name: [Fixed-point math](../guides/math.md#names).
 
 ## HX_STACK
 

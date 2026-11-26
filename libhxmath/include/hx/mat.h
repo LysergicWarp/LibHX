@@ -15,15 +15,19 @@ extern "C" {
 
 void hx_mat_identity(hx_mat_t *result);
 
-/** a by b: b is applied to the point first. The result is neither a nor b */
+/** a by b: b is applied to the point first. Each word of the rotation and each coordinate of the
+ * translation is its products summed whole, then rounded down once. The result is neither a nor
+ * b */
 void hx_mat_mul(const hx_mat_t *a, const hx_mat_t *b, hx_mat_t *result);
-/** @copydoc hx_mat_mul */
+/** hx_mat_mul with each sum rounded to the nearest, a half going up. The result is neither a nor
+ * b */
 void hx_mat_mul_round(const hx_mat_t *a, const hx_mat_t *b, hx_mat_t *result);
 
 /** The rotation transposed, no translation */
 void hx_mat_transpose(const hx_mat_t *m, hx_mat_t *result);
 
-/** The inverse of a rotation with a translation. Not for a matrix that scales */
+/** The inverse of a rotation with a translation. Not for a matrix that scales. Each coordinate of
+ * the translation is three products summed and negated whole, then rounded down once */
 void hx_mat_invert_rigid(const hx_mat_t *m, hx_mat_t *result);
 
 /* m by a turn about an axis, the turn given as its sine and then its cosine */
@@ -32,7 +36,8 @@ void hx_priv_mat_rotate_y(const hx_mat_t *m, const hx_fix14_t *turn, hx_mat_t *r
 void hx_priv_mat_rotate_z(const hx_mat_t *m, const hx_fix14_t *turn, hx_mat_t *result);
 
 /** m by a turn about an axis: the turn is applied to the point first. The turn is by hx_sin and
- * hx_cos of the angle */
+ * hx_cos of the angle. Each word the turn changes is two products, summed or taken apart whole,
+ * then rounded down once */
 static inline void
 hx_mat_rotate_x(const hx_mat_t *m, hx_angle_t angle, hx_mat_t *result)
 {
@@ -104,10 +109,13 @@ void hx_priv_mat_lookat(const hx_vec3_t *eye, const hx_vec3_t *target, const hx_
  * its x toward its y. The picture turns the other way: the view is hx_mat_rotation_z of the roll
  * negated, applied behind the level view.
  *
- * With no roll each rotation word is within 1/16384 of the exact one. Straight along y the camera
- * has no level: it is then taken as facing +z ahead of its tilt. With target at eye it faces +z.
- * The two are under 32768 apart on every axis: past that the difference does not fit and the
- * view faces elsewhere */
+ * Each rotation word is rounded to the nearest, and with no roll it is within 1/16384 of the exact
+ * one. Each coordinate of the translation is three products summed and negated whole, then
+ * rounded down once.
+ *
+ * Straight along y the camera has no level: it is then taken as facing +z ahead of its tilt. With
+ * target at eye it faces +z. The two are under 32768 apart on every axis: past that the
+ * difference does not fit and the view faces elsewhere */
 static inline void
 hx_mat_lookat(const hx_vec3_t *eye, const hx_vec3_t *target, hx_angle_t roll, hx_mat_t *result)
 {
@@ -130,7 +138,8 @@ hx_mat_lookat_fast(const hx_vec3_t *eye, const hx_vec3_t *target, hx_angle_t rol
             (roll == 0) ? 0 : hx_priv_sincos[(uint16_t)-roll >> 4], result);
 }
 
-/** v by m */
+/** v by m. No places are lost: a 2.14 word by a 14.2 coordinate is 16.16 as it stands. Each
+ * coordinate wraps */
 void hx_mat_transform(const hx_mat_t *m, const hx_vtx_t *v, hx_vec3_t *result);
 
 /** v by m's rotation alone, no translation: a direction or a normal. Each coordinate is three

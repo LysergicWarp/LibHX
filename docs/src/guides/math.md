@@ -46,7 +46,10 @@ A function's name says how it rounds and what it gives up:
 | `hx_mul_round` | Rounds to the nearest |
 | `hx_sqrt_fast` | Gives up accuracy for speed |
 
-The sine, cosine, tangent and atan2 are to the nearest under their plain names.
+- A plain name drops the places it cannot keep. A product or a shift rounds down, a divide
+  rounds toward zero.
+- The sine, cosine, tangent, atan2 and the rotation `hx_mat_lookat` builds are to the nearest
+  under their plain names.
 
 ## A view and its points
 

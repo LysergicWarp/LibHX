@@ -118,8 +118,9 @@ hx_fix16_t hx_vec2_distance(const hx_vec2_t *a, const hx_vec2_t *b);
 
 /** v at the length of one. A vector of any size, (0, 0) stays as it is. The result may be v.
  *
- * The plain one rounds each coordinate toward zero: a vector along an axis may come out 1/65536
- * short of one. The other rounds to the nearest, and such a vector comes out as one exactly */
+ * The plain one rounds each coordinate toward zero, the other to the nearest. Each coordinate is
+ * within 1/65536 of the exact one rounded that way, over or under. A vector along an axis may
+ * come out 1/65536 short of one from the plain one, and comes out as one exactly from the other */
 void hx_vec2_normalize(const hx_vec2_t *v, hx_vec2_t *result);
 /** @copydoc hx_vec2_normalize */
 void hx_vec2_normalize_round(const hx_vec2_t *v, hx_vec2_t *result);

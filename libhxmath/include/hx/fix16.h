@@ -67,6 +67,7 @@ hx_mul(hx_fix16_t a, hx_fix16_t b)
         return (hx_fix16_t)(((uint32_t)(product >> 32) << 16) | ((uint32_t)product >> 16));
 }
 
+/** To the nearest, a half goes up */
 static inline hx_fix16_t
 hx_mul_round(hx_fix16_t a, hx_fix16_t b)
 {

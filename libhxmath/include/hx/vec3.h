@@ -147,8 +147,9 @@ void hx_vec3_cross(const hx_vec3_t *a, const hx_vec3_t *b, hx_vec3_t *result);
 
 /** v at the length of one. A vector of any size, (0, 0, 0) stays as it is. The result may be v.
  *
- * The plain one rounds each coordinate toward zero: a vector along an axis may come out 1/65536
- * short of one. The other rounds to the nearest, and such a vector comes out as one exactly */
+ * The plain one rounds each coordinate toward zero, the other to the nearest. Each coordinate is
+ * within 1/65536 of the exact one rounded that way, over or under. A vector along an axis may
+ * come out 1/65536 short of one from the plain one, and comes out as one exactly from the other */
 void hx_vec3_normalize(const hx_vec3_t *v, hx_vec3_t *result);
 /** @copydoc hx_vec3_normalize */
 void hx_vec3_normalize_round(const hx_vec3_t *v, hx_vec3_t *result);
