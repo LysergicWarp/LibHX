@@ -2,7 +2,7 @@
 
 #include <hx/trig.h>
 
-const hx_fix14_t hx_priv_sincos[4096][2] __attribute__((aligned(16))) = {
+const hx_sincos_t hx_priv_sincos[4096] __attribute__((aligned(16))) = {
         {      0,  16384 }, {     25,  16384 }, {     50,  16384 }, {     75,  16384 },
         {    101,  16384 }, {    126,  16384 }, {    151,  16383 }, {    176,  16383 },
         {    201,  16383 }, {    226,  16382 }, {    251,  16382 }, {    276,  16382 },

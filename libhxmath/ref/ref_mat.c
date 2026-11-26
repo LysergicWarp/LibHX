@@ -105,11 +105,11 @@ hx_ref_mat_invert_rigid(const hx_mat_t *m, hx_mat_t *result)
 
 /* The turn takes the axis "from" toward the axis "toward" and keeps the third */
 INLINE void
-turned(const hx_mat_t *m, hx_angle_t angle, hx_mat_t *result, uint32_t from, uint32_t toward,
-    uint32_t kept)
+turned(const hx_mat_t *m, const hx_sincos_t *turn, hx_mat_t *result, uint32_t from,
+    uint32_t toward, uint32_t kept)
 {
-        const int32_t sine = hx_sin(angle);
-        const int32_t cosine = hx_cos(angle);
+        const int32_t sine = turn->sine;
+        const int32_t cosine = turn->cosine;
 
         for (uint32_t i = 0; i < 3U; i++) {
                 const int32_t a = m->rotation[i][from];
@@ -124,19 +124,43 @@ turned(const hx_mat_t *m, hx_angle_t angle, hx_mat_t *result, uint32_t from, uin
 }
 
 void
+hx_ref_mat_rotate_x_sincos(const hx_mat_t *m, const hx_sincos_t *turn, hx_mat_t *result)
+{
+        turned(m, turn, result, 1, 2, 0);
+}
+
+void
+hx_ref_mat_rotate_y_sincos(const hx_mat_t *m, const hx_sincos_t *turn, hx_mat_t *result)
+{
+        turned(m, turn, result, 2, 0, 1);
+}
+
+void
+hx_ref_mat_rotate_z_sincos(const hx_mat_t *m, const hx_sincos_t *turn, hx_mat_t *result)
+{
+        turned(m, turn, result, 0, 1, 2);
+}
+
+void
 hx_ref_mat_rotate_x(const hx_mat_t *m, hx_angle_t angle, hx_mat_t *result)
 {
-        turned(m, angle, result, 1, 2, 0);
+        const hx_sincos_t turn = { hx_sin(angle), hx_cos(angle) };
+
+        turned(m, &turn, result, 1, 2, 0);
 }
 
 void
 hx_ref_mat_rotate_y(const hx_mat_t *m, hx_angle_t angle, hx_mat_t *result)
 {
-        turned(m, angle, result, 2, 0, 1);
+        const hx_sincos_t turn = { hx_sin(angle), hx_cos(angle) };
+
+        turned(m, &turn, result, 2, 0, 1);
 }
 
 void
 hx_ref_mat_rotate_z(const hx_mat_t *m, hx_angle_t angle, hx_mat_t *result)
 {
-        turned(m, angle, result, 0, 1, 2);
+        const hx_sincos_t turn = { hx_sin(angle), hx_cos(angle) };
+
+        turned(m, &turn, result, 0, 1, 2);
 }

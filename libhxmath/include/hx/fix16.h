@@ -120,6 +120,36 @@ hx_div(hx_fix16_t a, hx_fix16_t b)
         return hx_div_collect();
 }
 
+/** 1 / value. The quotient fits for a value 3/65536 or more from 0 */
+static inline hx_fix16_t
+hx_recip(hx_fix16_t value)
+{
+        return hx_div((hx_fix16_t)0x10000, value);
+}
+
+/** Starts a * b / c on the whole product, 64 bits: no places are lost ahead of the divide. The
+ * three may be of any format, whole numbers too: the quotient is in a's when b and c share
+ * one. hx_div_collect collects it */
+static inline void
+hx_mul_div_start(hx_fix16_t a, hx_fix16_t b, hx_fix16_t c)
+{
+        volatile struct sh2_divu * const divu = SH2_DIVU;
+        const int64_t product = (int64_t)a * b;
+
+        divu->dvsr = c;
+        divu->dvdnth = (int32_t)(product >> 32);
+        divu->dvdntl = (int32_t)(uint32_t)product;
+}
+
+/** a * b / c, as hx_mul_div_start starts it */
+static inline hx_fix16_t
+hx_mul_div(hx_fix16_t a, hx_fix16_t b, hx_fix16_t c)
+{
+        hx_mul_div_start(a, b, c);
+
+        return hx_div_collect();
+}
+
 /** @} */
 
 /** 0 for a value below 0. Never under the root, at most 1/65536 over */

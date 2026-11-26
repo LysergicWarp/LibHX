@@ -11,7 +11,7 @@ extern "C" {
 #endif
 
 /* Sine and cosine, 4096 steps a turn */
-extern const hx_fix14_t hx_priv_sincos[4096][2];
+extern const hx_sincos_t hx_priv_sincos[4096];
 
 /* The tangent over half a turn, 1024 steps and the first again */
 extern const hx_fix16_t hx_priv_tan[1025];
@@ -26,10 +26,11 @@ hx_sin(hx_angle_t angle)
 {
         const uint32_t turned = (uint32_t)(uint16_t)angle + 8U;
         const int32_t apart = (int32_t)(turned & 15U) - 8;
-        const hx_fix14_t * const pair = hx_priv_sincos[(turned >> 4) & 4095U];
-        const int64_t along = ((int64_t)(apart * pair[1]) * HX_PRIV_ANGLE_UNIT) + 0x80000000LL;
+        const hx_sincos_t * const pair = &hx_priv_sincos[(turned >> 4) & 4095U];
+        const int64_t along =
+            ((int64_t)(apart * pair->cosine) * HX_PRIV_ANGLE_UNIT) + 0x80000000LL;
 
-        return (hx_fix14_t)(pair[0] + (int32_t)(along >> 32));
+        return (hx_fix14_t)(pair->sine + (int32_t)(along >> 32));
 }
 
 /** The cosine, as the sine: its slope is the sine negated */
@@ -38,10 +39,19 @@ hx_cos(hx_angle_t angle)
 {
         const uint32_t turned = (uint32_t)(uint16_t)angle + 8U;
         const int32_t apart = (int32_t)(turned & 15U) - 8;
-        const hx_fix14_t * const pair = hx_priv_sincos[(turned >> 4) & 4095U];
-        const int64_t along = ((int64_t)(apart * pair[0]) * HX_PRIV_ANGLE_UNIT) + 0x80000000LL;
+        const hx_sincos_t * const pair = &hx_priv_sincos[(turned >> 4) & 4095U];
+        const int64_t along =
+            ((int64_t)(apart * pair->sine) * HX_PRIV_ANGLE_UNIT) + 0x80000000LL;
 
-        return (hx_fix14_t)(pair[1] - (int32_t)(along >> 32));
+        return (hx_fix14_t)(pair->cosine - (int32_t)(along >> 32));
+}
+
+/** hx_sin and hx_cos of one angle */
+static inline void
+hx_sincos(hx_angle_t angle, hx_sincos_t *result)
+{
+        result->sine = hx_sin(angle);
+        result->cosine = hx_cos(angle);
 }
 
 /** The sine and the cosine of the angle's top 12 bits: the table's entry at or below the angle.
@@ -49,14 +59,21 @@ hx_cos(hx_angle_t angle)
 static inline hx_fix14_t
 hx_sin_fast(hx_angle_t angle)
 {
-        return hx_priv_sincos[(uint16_t)angle >> 4][0];
+        return hx_priv_sincos[(uint16_t)angle >> 4].sine;
 }
 
 /** @copydoc hx_sin_fast */
 static inline hx_fix14_t
 hx_cos_fast(hx_angle_t angle)
 {
-        return hx_priv_sincos[(uint16_t)angle >> 4][1];
+        return hx_priv_sincos[(uint16_t)angle >> 4].cosine;
+}
+
+/** hx_sin_fast and hx_cos_fast of one angle */
+static inline void
+hx_sincos_fast(hx_angle_t angle, hx_sincos_t *result)
+{
+        *result = hx_priv_sincos[(uint16_t)angle >> 4];
 }
 
 /** The tangent to the nearest 1/65536, one off at most. The largest value there is for a quarter

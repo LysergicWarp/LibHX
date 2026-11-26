@@ -28,7 +28,7 @@ example(void)
 
 The number in a fixed-point name is its fraction bits. The vectors are `hx_vec2_t` and
 `hx_vec3_t`, a model's point is `hx_vtx_t`, and a matrix is `hx_mat_t`: a rotation and a
-translation.
+translation. A sine with its cosine is `hx_sincos_t`.
 
 ## Conventions
 

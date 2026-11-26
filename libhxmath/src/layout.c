@@ -41,6 +41,10 @@ FIELD(hx_projected_t, screen, HX_PROJECTED_SCREEN);
 FIELD(hx_projected_t, z, HX_PROJECTED_Z);
 SIZE(hx_projected_t, HX_PROJECTED_SIZE);
 
+FIELD(hx_sincos_t, sine, HX_SINCOS_SINE);
+FIELD(hx_sincos_t, cosine, HX_SINCOS_COSINE);
+SIZE(hx_sincos_t, HX_SINCOS_SIZE);
+
 FIELD(hx_mat_t, rotation, HX_MAT_ROTATION);
 FIELD(hx_mat_t, unused, HX_MAT_UNUSED);
 FIELD(hx_mat_t, translation, HX_MAT_TRANSLATION);

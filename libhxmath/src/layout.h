@@ -26,6 +26,10 @@
 #define HX_PROJECTED_Z          4
 #define HX_PROJECTED_SIZE       8
 
+#define HX_SINCOS_SINE          0
+#define HX_SINCOS_COSINE        2
+#define HX_SINCOS_SIZE          4
+
 /* The rotation is three rows of three words */
 #define HX_MAT_ROTATION         0
 #define HX_MAT_ROW_SIZE         6

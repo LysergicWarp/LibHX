@@ -32,7 +32,7 @@ Save "sincos_table.c" (@(
     ""
     "#include <hx/trig.h>"
     ""
-    "const hx_fix14_t hx_priv_sincos[4096][2] __attribute__((aligned(16))) = {"
+    "const hx_sincos_t hx_priv_sincos[4096] __attribute__((aligned(16))) = {"
 ) + (Rows $pairs 4) + @("};"))
 
 # The tangent over half a turn in 1024 steps and the first again, 16.16. The quarter turn has no

@@ -1,5 +1,5 @@
 /* void hx_priv_mat_lookat(const hx_vec3_t *eye, const hx_vec3_t *target,
- *     const hx_fix14_t *roll, hx_mat_t *result)
+ *     const hx_sincos_t *roll, hx_mat_t *result)
  *
  * roll is the sine and then the cosine of the roll negated, or 0 for no roll: hx_mat_lookat and
  * its fast form in the header each bring their own.

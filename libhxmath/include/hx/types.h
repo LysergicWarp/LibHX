@@ -54,6 +54,12 @@ typedef struct {
         hx_fix16_t z;
 } hx_projected_t;
 
+/** A sine and its cosine, 4 bytes on a multiple of 4: a copy of it is one long */
+typedef struct {
+        hx_fix14_t sine;
+        hx_fix14_t cosine;
+} __attribute__ ((aligned(4))) hx_sincos_t;
+
 /** A rotation by rows and a translation, 32 bytes. The functions leave the unused word alone */
 typedef struct {
         hx_fix14_t rotation[3][3];
