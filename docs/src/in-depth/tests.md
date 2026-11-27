@@ -81,7 +81,7 @@ report. The script compares the picture as it does any other.
 2. Compares the two builds. The archives, the program and the disc image have to be the same
    bytes.
 3. Runs the first build's disc until the report's mark is in work RAM, or the frames run out.
-   The core gets the options the test names.
+   The core gets the options the test names, and the pads the buttons it presses.
 4. Reads the report.
 5. For a test that names a picture, runs the disc again and compares a screenshot with it.
 
@@ -122,7 +122,7 @@ That program is not part of the SDK. The script calls it as:
 ```
 beetle-runner --core <core> --image <cue> --bios <file> --region <region> --frames <count>
     --stop-address <address> --stop-ascii <text> --capture <address>:<length> ...
-    --core-option <name>=<value> ...
+    --core-option <name>=<value> ... --input <frame>:<port>:<button>:<held> ...
 ```
 
 and, for the screenshot, as:
@@ -130,10 +130,15 @@ and, for the screenshot, as:
 ```
 beetle-runner --core <core> --image <cue> --bios <file> --region <region> --frames <count>
     --screenshot <frame>:<file> --core-option <name>=<value> ...
+    --input <frame>:<port>:<button>:<held> ...
 ```
 
 - `--core-option` sets an option of the core. It is given once for each option the test names
   in `HX_TEST_CORE_OPTIONS`: the cartridge in the slot, for one.
+- `--input` holds a button of a pad from a frame on, or lets it go. It is given once for each
+  change the test names in `HX_TEST_INPUTS`. The frame counts from 1 and the port from 0. The
+  button is the number of a libretro joypad's. The last number is 1 for held and 0 for let
+  go.
 - It runs the disc until the text is at the address in work RAM, or for the count of frames.
   It looks for the text once a frame, after the frame has run. A test may count on that: text
   the program takes away again within the frame is not found.

@@ -1,10 +1,12 @@
 # Builds libhxtest.a into HX_OUT, a folder of the test disc that builds it: the report a test
-# disc leaves in work RAM, and the report on screen. For tests alone.
+# disc leaves in work RAM, the report on screen, and a pad read for the time being. For tests
+# alone.
 # make headers checks each public header alone, and takes no HX_OUT.
 include ../build/flags.mk
 
 HX_LIB_SOURCES:= \
 	bands.c \
+	pad_temp.c \
 	report.c \
 	show.c
 

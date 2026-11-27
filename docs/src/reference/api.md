@@ -14,4 +14,4 @@ shows on its page here.
 | libhxrt | [`start.h`](../api/start_8h.html), [`cart.h`](../api/cart_8h.html), [`font.h`](../api/font_8h.html), [`string.h`](../api/string_8h.html) |
 | libhxtest | [`test.h`](../api/test_8h.html) |
 | Fonts | [`unscii8.h`](../api/unscii8_8h.html) |
-| Register maps | [`map.h`](../api/map_8h.html), [`cache.h`](../api/cache_8h.html), [`frt.h`](../api/frt_8h.html), [`divu.h`](../api/divu_8h.html), [`scu.h`](../api/scu_8h.html), [`vdp2.h`](../api/hw_2include_2hx_2hw_2315_2vdp2_8h.html) |
+| Register maps | [`map.h`](../api/map_8h.html), [`cache.h`](../api/cache_8h.html), [`frt.h`](../api/frt_8h.html), [`divu.h`](../api/divu_8h.html), [`scu.h`](../api/scu_8h.html), [`smpc.h`](../api/smpc_8h.html), [`vdp2.h`](../api/hw_2include_2hx_2hw_2315_2vdp2_8h.html) |

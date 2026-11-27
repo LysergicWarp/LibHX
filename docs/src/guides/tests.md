@@ -86,6 +86,32 @@ A picture whose lines hold more than one colour goes in a file, which
 - A line is a count of lines of the picture, then their runs of pixels from the left.
 - The pixels of a line add up to the width. The build stops on a line where they do not.
 
+## Press the pad's buttons
+
+A test that reads a pad names the buttons its run presses:
+
+```make
+HX_SOURCES:= main.c
+HX_TEST_INPUTS:= 1000:0:4:1 1012:0:4:0
+include ../../../build/test.mk
+```
+
+- A change is `<frame>:<port>:<button>:<held>`. This one holds Up on the first port's pad from
+  frame 1000, and lets it go at frame 1012.
+- The frame counts from 1 and the port from 0.
+- A button is the number of a libretro joypad's. Up is 4.
+- A program starts some 700 frames into a run, after the console's own start.
+
+`hx_test_pad_temp` reads a Saturn pad's buttons in a test, for the time being:
+
+```c
+if (hx_test_pad_temp(0) & HX_TEST_PAD_UP_TEMP) {
+        /* Up is held on the first port's pad */
+}
+```
+
+It is removed once the SDK reads peripherals through the SMPC.
+
 ## See the report on a console
 
 A console has no script to read work RAM. `hx_test_show`, the last call of the test above,
@@ -167,9 +193,11 @@ pass startup/high-stack: 28 rows
 | `report/bands-more-failed` | The same with a row without a band failing |
 | `report/bands-full` | The same with a full report |
 | `report/bands-own` | The same with the test's own rows, after `hx_test_end` |
+| `pad-temp/buttons` | `hx_test_pad_temp`: each button of the first port's pad on its own |
 
 Every test but the `vdp2`, `text` and `report` ones ends with `hx_test_show`, so its disc
-shows its report on a console.
+shows its report on a console. `pad-temp/buttons` shows it from the start and after each
+button: on a console the buttons are pressed by hand, in the order of its rows.
 
 ## More detail
 

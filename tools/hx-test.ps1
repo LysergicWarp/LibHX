@@ -40,10 +40,15 @@
 #
 #   beetle-runner --core <core> --image <cue> --bios <file> --region <region> --frames <count>
 #       --stop-address <address> --stop-ascii <text> --capture <address>:<length> ...
-#       --core-option <name>=<value> ...
+#       --core-option <name>=<value> ... --input <frame>:<port>:<button>:<held> ...
 #
 # --core-option sets an option of the core, and is given once for each option a test names
 # (HX_TEST_CORE_OPTIONS, build/test.mk): the cartridge in the slot, for one.
+#
+# --input holds a button of a pad from a frame on, or lets it go, and is given once for each
+# change a test names (HX_TEST_INPUTS, build/test.mk). The frame counts from 1 and the port
+# from 0. The button is the number of a libretro joypad's. The last number is 1 for held and 0
+# for let go.
 #
 # It runs the disc until the text is at the address in work RAM, or for the count of frames.
 # It exits with 0 when the text was there and with 2 when the frames ran out. It writes one
@@ -300,6 +305,10 @@ function Test-Disc {
     # The core's options the test names, one a line
     foreach ($option in @(Get-Content -LiteralPath (Join-Path $first "$name.options") | Where-Object { $_ })) {
         $run += @("--core-option", $option)
+    }
+    # The buttons the test presses, one change a line
+    foreach ($input in @(Get-Content -LiteralPath (Join-Path $first "$name.inputs") | Where-Object { $_ })) {
+        $run += @("--input", $input)
     }
 
     $arguments = $run + @(

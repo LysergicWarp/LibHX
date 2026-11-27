@@ -11,7 +11,11 @@
 #   HX_TEST_CFLAGS         more for its C and its C++, as -D
 #   HX_TEST_CORE_OPTIONS   the options of the emulator's core its run needs, each as
 #                          <name>=<value>: the cartridge in the slot, for one
-#   HX_TEST_SCREEN_LINES   the picture its run is to show, from the top: each <lines>:<colour>
+#   HX_TEST_INPUTS         the buttons its run presses, each as <frame>:<port>:<button>:<held>:
+#                          from that frame on, counted from 1, the button of the pad at that
+#                          port, counted from 0, is held for 1 and let go for 0. A button is
+#                          the number of a libretro joypad's.
+#   HX_TEST_SCREEN_LINES  the picture its run is to show, from the top: each <lines>:<colour>
 #                          is that many lines of one colour. A colour is 4 hexadecimal digits,
 #                          the 15 bits VDP2 has it in: 5 each of blue, green and red.
 #   HX_TEST_SCREEN_PICTURE in place of HX_TEST_SCREEN_LINES, a file that holds the picture,
@@ -31,7 +35,8 @@
 #
 # The disc is HX_OUT/<folder>.cue, the program HX_OUT/<folder>.elf, and HX_OUT/<folder>.nm
 # lists the program's symbols, the report's among them, each with its address and size.
-# HX_OUT/<folder>.options holds the core's options, one a line. HX_OUT/<folder>.screen holds
+# HX_OUT/<folder>.options holds the core's options, one a line, and HX_OUT/<folder>.inputs the
+# buttons the run presses, one change a line. HX_OUT/<folder>.screen holds
 # the picture: the width and the border's colour, then lines as HX_TEST_SCREEN_PICTURE's file
 # has them.
 #
@@ -76,6 +81,17 @@ $(foreach option,$(HX_TEST_CORE_OPTIONS), \
     $(if $(findstring ',$(option))$(findstring ",$(option))$(findstring \,$(option)), \
         $(error HX_TEST_CORE_OPTIONS holds a quote or a backslash)))
 
+# Four numbers, the last 0 or 1: a digit or a colon is all a change holds
+$(foreach input,$(HX_TEST_INPUTS), \
+    $(if $(filter 4,$(words $(subst :, ,$(input)))),, \
+        $(error HX_TEST_INPUTS holds $(input). A change is <frame>:<port>:<button>:<held>)))
+$(foreach input,$(HX_TEST_INPUTS), \
+    $(if $(filter 0 1,$(word 4,$(subst :, ,$(input)))),, \
+        $(error HX_TEST_INPUTS holds $(input). Its last number is 1 for held or 0 for let go)))
+$(foreach input,$(HX_TEST_INPUTS), \
+    $(if $(strip $(subst 0,,$(subst 1,,$(subst 2,,$(subst 3,,$(subst 4,,$(subst 5,,$(subst 6,,$(subst 7,,$(subst 8,,$(subst 9,,$(subst :,,$(input))))))))))))), \
+        $(error HX_TEST_INPUTS holds $(input). A change is four numbers)))
+
 HX_TEST_SCREEN_PICTURE:= $(strip $(HX_TEST_SCREEN_PICTURE))
 ifneq ($(strip $(HX_TEST_SCREEN_LINES)),)
   ifneq ($(HX_TEST_SCREEN_PICTURE),)
@@ -103,7 +119,8 @@ $(foreach name,HX_TEST_SCREEN_LINES HX_TEST_SCREEN_PICTURE HX_TEST_SCREEN_WIDTH 
     $(if $(findstring ',$($(name)))$(findstring ",$($(name)))$(findstring \,$($(name))), \
         $(error $(name) holds a quote or a backslash)))
 
-all: $(HX_DISC_IMAGE) $(HX_PROGRAM).nm $(HX_PROGRAM).options $(HX_PROGRAM).screen
+all: $(HX_DISC_IMAGE) $(HX_PROGRAM).nm $(HX_PROGRAM).options $(HX_PROGRAM).inputs \
+    $(HX_PROGRAM).screen
 
 $(HX_PROGRAM).nm: $(HX_PROGRAM).elf
 	$(HX_NM) --numeric-sort --print-size --defined-only $< > $@.new
@@ -114,6 +131,12 @@ $(HX_PROGRAM).nm: $(HX_PROGRAM).elf
 $(HX_PROGRAM).options: hx-program-always
 	@mkdir -p $(@D)
 	@printf '%s\n' $(foreach option,$(HX_TEST_CORE_OPTIONS),'$(option)') | sed '/^$$/d' > $@.new
+	@mv $@.new $@
+
+# The same for the buttons: no line when the test presses none
+$(HX_PROGRAM).inputs: hx-program-always
+	@mkdir -p $(@D)
+	@printf '%s\n' $(foreach input,$(HX_TEST_INPUTS),'$(input)') | sed '/^$$/d' > $@.new
 	@mv $@.new $@
 
 # A file with no line when the test names no picture. Written on every run, as the options are.

@@ -25,7 +25,9 @@ extern "C" {
  * says rows or notes were left out for want of room. The rows are counted all the same.
  *
  * hx_test_show puts the report on screen as text, for a run on a console. hx_test_bands does
- * it without a font or a scroll screen. */
+ * it without a font or a scroll screen.
+ *
+ * hx_test_pad_temp reads a Saturn pad's buttons, for the time being. */
 #define HX_TEST_REPORT_SIZE 0x4000
 #define HX_TEST_MARK "HXREPORT"
 
@@ -85,6 +87,42 @@ void hx_test_show(void);
  *
  * The rows are read from the report's text, at any time: ahead of hx_test_end as after it. */
 void hx_test_bands(void);
+
+/** The buttons in hx_test_pad_temp's word, a bit set for one that is held */
+#define HX_TEST_PAD_RIGHT_TEMP 0x8000
+#define HX_TEST_PAD_LEFT_TEMP 0x4000
+#define HX_TEST_PAD_DOWN_TEMP 0x2000
+#define HX_TEST_PAD_UP_TEMP 0x1000
+#define HX_TEST_PAD_START_TEMP 0x0800
+#define HX_TEST_PAD_A_TEMP 0x0400
+#define HX_TEST_PAD_C_TEMP 0x0200
+#define HX_TEST_PAD_B_TEMP 0x0100
+#define HX_TEST_PAD_R_TEMP 0x0080
+#define HX_TEST_PAD_X_TEMP 0x0040
+#define HX_TEST_PAD_Y_TEMP 0x0020
+#define HX_TEST_PAD_Z_TEMP 0x0010
+#define HX_TEST_PAD_L_TEMP 0x0008
+
+/** Every button of the word */
+#define HX_TEST_PAD_BUTTONS_TEMP 0xFFF8
+
+/** Set in the word when a Saturn pad answered */
+#define HX_TEST_PAD_THERE_TEMP 0x0001
+
+/** The buttons held on the Saturn pad at a port, 0 for the first port and any other number
+ * for the second: HX_TEST_PAD_THERE_TEMP and a bit for each button held. 0 when what is at
+ * the port does not answer as a Saturn pad, or nothing is there.
+ *
+ * Temporary. It is here for tests until the SDK reads peripherals through the SMPC, and is
+ * removed then.
+ *
+ * The call reads the pad's lines itself, through the SMPC's parallel I/O registers. It gives
+ * both ports to the SH-2 and leaves them so, with EXLE off: the SMPC reads no peripheral
+ * after it. A Mega Drive pad, a mouse, a multitap and every other peripheral give 0.
+ *
+ * A read takes the port's lines through four states and back to rest. Not for an interrupt
+ * handler that may come in the middle of another read. */
+uint32_t hx_test_pad_temp(uint32_t port);
 
 #ifdef __cplusplus
 }
