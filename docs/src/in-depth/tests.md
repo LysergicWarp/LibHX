@@ -5,24 +5,57 @@ program that runs the emulator.
 
 ## The report
 
-The report is text in work RAM, `hx_test_report`. A row is a line, and the last line counts
-them:
+The report is text in work RAM, `hx_test_report`. A row is a line, a note is a line, and the
+last line counts the rows:
 
 ```
 pass <name> <got> <wanted>
 FAIL <name> <got> <wanted>
+note <name> <value>
 end <rows> <failed>
 ```
 
 - The numbers are 8 hexadecimal digits.
-- A line `full` ahead of the last says rows were left out for want of room. They are counted
-  all the same.
+- A note is a value to read. It is no row, and the last line does not count it.
+- A line `full` ahead of the last says rows or notes were left out for want of room. The rows
+  are counted all the same.
 - A mark, `HXREPORT`, sits ahead of the text. It is written last, so a report that is there is
   whole.
 
 ## The report on screen
 
-`hx_test_show` draws the rows with VDP2's back screen alone, a colour for each line, so it
+`hx_test_show` writes the report as text on NBG0, in the primary font: 40 columns by 28
+lines on a screen of 320 by 224, black behind the text and around the picture.
+
+| Line | What |
+| --- | --- |
+| 0 | `rows <count>, failed <count>` in decimal, then `, report full` for a full report |
+| 1 to 27 | A line of the report each: the rows that fail, then the notes, then the rows that pass |
+| 27 | With more than 27 lines of the report: `<count> more not shown`, and lines 1 to 26 hold the first 26 |
+
+| Columns | What |
+| --- | --- |
+| 0 to 20 | The name, its first 21 characters |
+| 22 to 29 | What the row got, or the note's value |
+| 31 to 38 | What was wanted, for a row that fails |
+
+- A row that fails is red, a note white, a row that passes green. Each kind keeps the
+  report's order.
+- The first line counts the rows the text holds. For a full report that is fewer than the
+  report's last line counts: the rows left out are not among them.
+- The first line is green when every row passes, and red when one fails or the report is
+  full.
+- The count of lines not shown is red when a row that fails is among them, and white
+  otherwise.
+- The lines are read from the report's text: one that starts with `pass`, `FAIL` or `note`.
+  So the call shows the report so far at any time, ahead of `hx_test_end` too.
+- In VRAM: the page of pattern names from the start, the back screen's colour at `0x2000`,
+  the font's glyphs as cells from `0x4000`. The inks are colours 1, 17 and 33.
+- The call writes VRAM with the display off, and turns it on last.
+- A primary font that is not 8 by 8 dots gives no cell. NBG0 is then left off, and the screen
+  is black.
+
+`hx_test_bands` draws the rows with VDP2's back screen alone, a colour for each line, so it
 needs no font and no scroll screen. The screen is 320 by 224 with a black border.
 
 | Lines | What |
@@ -33,14 +66,13 @@ needs no font and no scroll screen. The screen is 320 by 224 with a black border
 | 222 to 223 | Black |
 
 - Row `n`, counted from 0, starts at line `2 + 5 * n + 2 * (n / 5)`, the division whole.
-- The rows are read from the report's text: a line that starts with `pass` or `FAIL`. So the
-  call shows the rows so far at any time, ahead of `hx_test_end` too.
-- A report with the line `full` has the band for more rows in red: rows are missing from it.
+- A note has no band.
+- A report with the line `full` has the band for more rows in red: lines are missing from it.
 - The table of colours is the first 448 bytes of VRAM.
 
 The `report` tests write a text into the report by hand, show it, take it out again, and
-then leave rows of their own. `report/show-own` shows its own rows. The script compares the
-picture as it does any other.
+then leave rows of their own. `report/text-own` and `report/bands-own` show their own
+report. The script compares the picture as it does any other.
 
 ## What the script does
 

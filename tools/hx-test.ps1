@@ -22,7 +22,7 @@
 # Each test is built twice, with the clone and the build at other places the second time, and
 # the archives, the program and the disc image have to be the same bytes. The first build's
 # disc is run until the report's mark is in work RAM. A test passes when its report is whole
-# and every row in it passes.
+# and every row in it passes. A note in it is a value to read, in report.txt: it is no row.
 #
 # A test may name the picture its run is to show (HX_TEST_SCREEN_LINES or
 # HX_TEST_SCREEN_PICTURE, build/test.mk). Its disc is then run again, with no stop, two frames
@@ -340,10 +340,12 @@ function Test-Disc {
     $text = [Text.Encoding]::ASCII.GetString($bytes, $markSize, $end - $markSize)
     Set-Content -LiteralPath (Join-Path $folder "report.txt") -Value $text -NoNewline
 
-    # A row passes when its two numbers are the same, and says so itself
+    # A row passes when its two numbers are the same, and says so itself. A note is a value
+    # to read: no row, and not counted
     $lines = @($text.Split("`n") | Where-Object { $_ })
     $rows = @()
     $bad = @()
+    $notes = 0
     foreach ($line in $lines) {
         if ($line -cmatch '^(pass|FAIL) \S+ ([0-9a-f]{8}) ([0-9a-f]{8})$') {
             $rows += $line
@@ -354,6 +356,8 @@ function Test-Disc {
             if (-not $same) {
                 $bad += $line
             }
+        } elseif ($line -cmatch '^note \S+ [0-9a-f]{8}$') {
+            $notes++
         }
     }
     $full = $lines -ccontains "full"
@@ -363,11 +367,11 @@ function Test-Disc {
     }
     $counted = [Convert]::ToUInt32($Matches[1], 16)
     $countedBad = [Convert]::ToUInt32($Matches[2], 16)
-    if ($lines.Count -ne $rows.Count + 1 + [int] $full) {
-        return "the report holds a line that is no row"
+    if ($lines.Count -ne $rows.Count + $notes + 1 + [int] $full) {
+        return "the report holds a line that is no row and no note"
     }
     if ($full) {
-        return "the report is full: $counted rows, $($rows.Count) of them in it"
+        return "the report is full, with lines left out: it counts $counted rows and holds $($rows.Count)"
     }
     if ($counted -ne $rows.Count -or $countedBad -ne $bad.Count) {
         return "the report counts $counted rows and $countedBad failed, and holds $($rows.Count) and $($bad.Count)"

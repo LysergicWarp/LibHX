@@ -27,7 +27,16 @@ main(void)
 
 - `hx_test_equal` adds a row, which passes when the two numbers are the same.
 - `hx_test_end` closes the report.
-- `hx_test_show` puts the rows on screen, for [a run on a console](#see-the-report-on-a-console).
+- `hx_test_show` puts the report on screen, for [a run on a console](#see-the-report-on-a-console).
+
+A value that is only to be read, with nothing to pass or fail, is a note:
+
+```c
+hx_test_note("sin.30", (uint32_t)hx_sin(HX_DEG(30)));
+```
+
+A note is a line of the report and of the screen. It is no row: the counts leave it out.
+After a run of the script it is in the test's `report.txt`.
 
 Its `Makefile`:
 
@@ -80,14 +89,30 @@ A picture whose lines hold more than one colour goes in a file, which
 ## See the report on a console
 
 A console has no script to read work RAM. `hx_test_show`, the last call of the test above,
-puts the report's rows on screen, a band of colour for each.
+puts the report on screen as text. A report of five rows and a note:
 
-- A green band is a row that passes, a red one a row that fails. The first row is at the top.
-- Three black lines follow every fifth band, for counting.
-- The picture holds 40 rows. With more, one more band at the bottom says so: white when the
-  rows without a band all pass, red when one fails.
-- A program that does not reach the call shows no bands.
+```
+rows 5, failed 2
+bad.01                00000001 00000101
+bad.05                00000005 00000105
+value.02              abcd0002
+row.00                00000000
+row.03                00000003
+row.04                00000004
+```
+
+- The first line counts the rows and the ones that fail. It is green when every row passes.
+- A red line is a row that fails: its name, what it got, what was wanted.
+- A white line is a note: its name and its value.
+- A green line is a row that passes: its name and what it got.
+- The rows that fail come first, then the notes, then the rows that pass.
+- 27 lines fit. With more, the last line of the screen counts the ones not shown.
+- A program that does not reach the call shows no text.
 - The call takes VDP2 as its own. A test that checks a picture of its own does without it.
+
+`hx_test_bands` shows the rows without a font or a scroll screen, a band of colour for each:
+green for a row that passes, red for one that fails. It is for a test whose text does not
+show.
 
 ## Run the tests
 
@@ -129,12 +154,19 @@ pass startup/high-stack: 28 rows
 | `vdp2/planes` | NBG3's four planes in tiles of 16 by 16 dots, 256 colours and pattern names of two words, with NBG1 in front |
 | `text/primary` | The text calls with the primary font: every glyph, a string, numbers, a code the font does not hold, and places past the page's edges |
 | `text/own-font` | A font of the test's own, one of its sources, as cells, a string and hexadecimal digits, with pattern names of two words |
-| `report/show` | `hx_test_show`'s picture: both colours, and the gap after a fifth row |
-| `report/show-all` | The same with as many rows as bands |
-| `report/show-more` | The same with more rows than bands, the rows without a band passing |
-| `report/show-more-failed` | The same with a row without a band failing |
-| `report/show-full` | The same with a full report |
-| `report/show-own` | The same with the test's own rows, after `hx_test_end` |
+| `report/text` | `hx_test_show`'s picture: the three colours, the order of the lines, a name cut to its 21 characters |
+| `report/text-fit` | The same with as many lines as fit |
+| `report/text-more` | The same with more lines than fit, the ones not shown passing |
+| `report/text-more-fails-fit` | The same with as many rows that fail as lines shown, the ones not shown passing |
+| `report/text-more-failed` | The same with a row that fails among the ones not shown |
+| `report/text-full` | The same with a full report |
+| `report/text-own` | The same with the test's own report, after `hx_test_end` |
+| `report/bands` | `hx_test_bands`'s picture: both colours, the gap after a fifth row, no band for a note |
+| `report/bands-all` | The same with as many rows as bands |
+| `report/bands-more` | The same with more rows than bands, the rows without a band passing |
+| `report/bands-more-failed` | The same with a row without a band failing |
+| `report/bands-full` | The same with a full report |
+| `report/bands-own` | The same with the test's own rows, after `hx_test_end` |
 
 Every test but the `vdp2`, `text` and `report` ones ends with `hx_test_show`, so its disc
 shows its report on a console.
@@ -144,5 +176,5 @@ shows its report on a console.
 - API: [`<hx/test.h>`](../api/test_8h.html).
 - [Scripts](../reference/scripts.md#hx-testps1): every option of `hx-test.ps1`.
 - [Build settings](../reference/build.md#testmk): the settings of a test's Makefile.
-- [The test flow](../in-depth/tests.md): the report's text, the bands' places on screen, the
-  two builds, the screenshot, the results folder.
+- [The test flow](../in-depth/tests.md): the report's text, the places of the text and of
+  the bands on screen, the two builds, the screenshot, the results folder.

@@ -136,7 +136,7 @@ main(void)
         hx_cart_require(found->size + 1, too_small, &context_of_the_call);
 
         /* Reached only when the call returned. The report loses its mark within the frame, and
-         * the run looks for it after each frame, so it finds none. The screen loses its bands */
+         * the run looks for it after each frame, so it finds none. The screen loses its text */
         hx_test_report[0] = 0;
         vdp2_start();
         for (;;) {

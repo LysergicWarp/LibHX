@@ -1,5 +1,5 @@
-# hx_test_show with the test's own report, closed: seven rows that pass
-HX_SOURCES:= ../main.c
+# hx_test_bands with the test's own report, closed: seven rows that pass
+HX_SOURCES:= ../bands.c
 HX_TEST_CFLAGS:= -DOWN=7
 include ../bands.mk
 HX_TEST_SCREEN_WIDTH:= 320

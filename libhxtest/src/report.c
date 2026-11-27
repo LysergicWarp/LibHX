@@ -85,6 +85,26 @@ hx_test_equal(const char *name, uint32_t got, uint32_t wanted)
 }
 
 void
+hx_test_note(const char *name, uint32_t value)
+{
+        /* "note ", the name and its space, the number with the line's end */
+        const size_t size = 5 + length(name) + 1 + FIELD_SIZE;
+
+        if (ended) {
+                return;
+        }
+        if (size > HX_TEST_REPORT_SIZE - MARK_SIZE - END_SIZE - used) {
+                full = true;
+                return;
+        }
+        put_text("note ");
+        put_text(name);
+        put(' ');
+        put_number(value);
+        put('\n');
+}
+
+void
 hx_test_end(void)
 {
         if (ended) {

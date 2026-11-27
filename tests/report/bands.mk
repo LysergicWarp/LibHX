@@ -1,4 +1,4 @@
-# The parts of hx_test_show's picture, as HX_TEST_SCREEN_LINES takes them: a band for a row
+# The parts of hx_test_bands's picture, as HX_TEST_SCREEN_LINES takes them: a band for a row
 # that passes (P) and for one that fails (F), the band that says there are more rows (M), the
 # line between two bands (L) and the gap after every fifth (G)
 P:= 4:03e0

@@ -1,5 +1,5 @@
-# hx_test_show with 40 rows, the last one failing: every band, and none below them
-HX_SOURCES:= ../main.c
+# hx_test_bands with 40 rows, the last one failing: every band, and none below them
+HX_SOURCES:= ../bands.c
 HX_TEST_CFLAGS:= -DROWS=pppppppppppppppppppppppppppppppppppppppF
 include ../bands.mk
 HX_TEST_SCREEN_WIDTH:= 320
